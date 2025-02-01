@@ -12,7 +12,7 @@ export function EnvVarWarning() {
         <Button
           asChild
           size="sm"
-          variant={"outline"}
+          variant={"ghost"}
           disabled
           className="opacity-75 cursor-none pointer-events-none"
         >
