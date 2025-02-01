@@ -1,31 +1,38 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Search } from "lucide-react";
 
-// Create a single supabase client for interacting with your database
+// Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Define the type based on our schema
+// Updated types based on Supabase's returned data shape
 type Course = {
   id: number;
   course_code: string;
   title: string;
   historical_average_grade: number | null;
+  // 'universities' is returned as an object.
   universities: {
     name: string;
-  } | null;
+  };
+  // 'course_professors' is an array, but each object's 'professors' is now an object.
   course_professors: {
     professors: {
       full_name: string;
-    }
+    };
   }[];
 };
 
@@ -34,46 +41,55 @@ export default function HomePage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  useEffect(() => {
-    async function fetchCourses() {
-      setLoading(true);
-      // Query courses, joining universities and the instructors via course_professors
-      const { data, error } = await supabase
+  const fetchCourses = async (search?: string) => {
+    setLoading(true);
+    try {
+      let query = supabase
         .from("courses")
         .select(`
           id,
           course_code,
           title,
           historical_average_grade,
-          universities (
+          universities!inner (
             name
           ),
-          course_professors (
-            professors (
+          course_professors!inner (
+            professors!inner (
               full_name
             )
           )
         `)
         .eq("universities.name", "Michigan State University");
 
+      // Add search filter if provided
+      if (search) {
+        query = query.or(`course_code.ilike.%${search}%,title.ilike.%${search}%`);
+      }
+
+      const { data, error } = await query;
+
       if (error) {
         console.error("Error fetching courses:", error);
-      } else {
-        setCourses(data || []);
+        return;
       }
+
+      console.log("Raw Supabase response:", JSON.stringify(data, null, 2));
+
+      setCourses((data as Course[]) || []);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchCourses();
   }, []);
 
   const handleSearch = () => {
-    if (!searchQuery) return;
-    
-    const filteredCourses = courses.filter(course => 
-      course.course_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setCourses(filteredCourses);
+    fetchCourses(searchQuery);
   };
 
   return (
@@ -90,7 +106,7 @@ export default function HomePage() {
               className="pl-8"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
           <Button onClick={handleSearch}>Search</Button>
@@ -113,11 +129,11 @@ export default function HomePage() {
 
 // Course Card Component
 function CourseCard({ course }: { course: Course }) {
-  // Extract the first instructor's name if available
-  const instructor =
-    course.course_professors && course.course_professors.length > 0
-      ? course.course_professors[0].professors.full_name
-      : "Unknown Instructor";
+  // Extract instructor from course_professors; since 'professors' is an object:
+  const instructor = course.course_professors?.[0]?.professors?.full_name || "Unknown Instructor";
+
+  // 'universities' is now an object
+  const universityName = course.universities?.name || "Unknown University";
 
   return (
     <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
@@ -140,7 +156,12 @@ function CourseCard({ course }: { course: Course }) {
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground">Instructor: {instructor}</p>
+        <p className="text-sm text-muted-foreground">
+          Instructor: {instructor}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          University: {universityName}
+        </p>
       </CardContent>
     </Card>
   );
