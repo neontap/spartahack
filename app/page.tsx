@@ -86,7 +86,7 @@ export default function HomePage() {
       }
 
       console.log("Raw Supabase response:", JSON.stringify(data, null, 2));
-      setCourses((data as Course[]) || []);
+      setCourses((data as unknown as Course[]) || []);
     } catch (error) {
       console.error("Error:", error);
     } finally {

@@ -23,7 +23,7 @@ type Course = {
   historical_average_grade: number | null;
   universities: {
     name: string;
-  };
+  }[];
   course_professors: {
     professors: {
       full_name: string;
@@ -102,7 +102,7 @@ export default function CourseDetailPage() {
         .single();
 
       if (error) throw error;
-      setCourse(data as Course);
+      setCourse(data as unknown as Course);
     } catch (err) {
       console.error("Error fetching course details:", err);
       setError("Failed to load course details.");
@@ -191,7 +191,7 @@ export default function CourseDetailPage() {
   }
 
   const instructor = course.course_professors?.[0]?.professors?.full_name || "Unknown Instructor";
-  const universityName = course.universities?.name || "Unknown University";
+  const universityName = course.universities?.[0]?.name || "Unknown University";
 
   return (
     <main className="container mx-auto py-6 space-y-8">
