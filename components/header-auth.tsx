@@ -15,11 +15,11 @@ export default async function AuthButton() {
   if (!hasEnvVars) {
     return (
       <>
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-4 bg-rose-500 items-center">
           <div>
             <Badge
               variant={"default"}
-              className="font-normal pointer-events-none"
+              className="font-normal  pointer-events-none"
             >
               Please update .env.local file with anon key and url
             </Badge>
@@ -49,7 +49,7 @@ export default async function AuthButton() {
     );
   }
   return user ? (
-    <div className="flex items-center gap-4">
+    <div className="flex  items-center gap-4">
       Hey, {user.email}!
       <form action={signOutAction}>
         <Button type="submit" variant={"outline"}>
