@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
@@ -179,6 +180,10 @@ function CourseCard({ course }: { course: Course }) {
   const universityName = course.universities?.name || "Unknown University";
 
   return (
+    <Link 
+      href={`/courses/${course.id}`}
+      className="block no-underline" // Remove default link styling
+    >
     <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
       <CardHeader>
         <div className="flex justify-between items-start">
@@ -202,5 +207,6 @@ function CourseCard({ course }: { course: Course }) {
         </p>
       </CardContent>
     </Card>
+    </Link>
   );
 }
