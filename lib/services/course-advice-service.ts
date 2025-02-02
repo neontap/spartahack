@@ -117,21 +117,53 @@ Please provide detailed advice based on the above information. Consider the prer
                 throw new Error('OpenAI client not initialized');
             }
 
-            const completion = await this.openai.chat.completions.create({
-                model: "gpt-4-turbo-preview",
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are a helpful academic advisor with extensive knowledge about university courses. Provide specific, actionable advice based on real student experiences and course requirements."
-                    },
-                    {
-                        role: "user",
-                        content: prompt
-                    }
-                ],
-                temperature: 0.7,
-                max_tokens: 1000
-            });
+        // In your CourseAdviceService, update the OpenAI call:
+
+                    const completion = await this.openai.chat.completions.create({
+                        model: "gpt-4-turbo-preview",
+                        messages: [
+                            {
+                                role: "system",
+                                content: `You are a helpful academic advisor with extensive knowledge about university courses. 
+              When providing advice, always follow this format:
+        
+              1. Start with a brief "Quick Stats" section showing key metrics
+              2. Then provide a "Key Takeaways" section with 3-4 bullet points
+              3. Finally, give detailed advice in these sections:
+                 - "Course Overview" (2-3 sentences max)
+                 - "Before Taking This Course"
+                 - "During the Course"
+                 - "Tips for Success"
+              
+              Format your response using markdown for better readability.
+              Use emojis sparingly but effectively at the start of main sections.
+              Keep paragraphs short and use bullet points for lists.
+              Bold important terms or key phrases.`
+                            },
+                            {
+                                role: "user",
+                                content: `Based on this course information, provide advice about ${courseInfo.name}:
+        
+        Course Info:
+        ${courseInfo.description ? `Description: ${courseInfo.description}\n` : ''}
+        ${prerequisiteText}
+        
+        Stats:
+        - Average Rating: ${avgRating.toFixed(1)}/5
+        - Average Difficulty: ${avgDifficulty.toFixed(1)}/5
+        - Total Reviews: ${courseReviews?.length || 0}
+        
+        Student Reviews:
+        ${courseReviews?.map(r => `- ${r.comment}`).join('\n') || 'No reviews yet.'}
+        
+        Question: ${userQuestion}
+        
+        Remember to follow the formatting guidelines in the system message.`
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 1000
+                    });
 
             console.log('Received OpenAI response');
 
