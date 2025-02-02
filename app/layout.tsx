@@ -51,7 +51,7 @@ export default function RootLayout({
                     <Link href="/">
                       <Image
                           src="coursecheckminilogo.svg"
-                          className="mt-2"
+                          className=""
                           width={66}
                           height={52}
                           alt="Course Checker logo"
