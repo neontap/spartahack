@@ -36,6 +36,12 @@ const config = {
         'md-purple': {
           DEFAULT: '#B9A5E4'
         },
+        'slight-purple': {
+          DEFAULT: '#F9F6FF'
+        },
+        'glow-purple' : {
+          DEFAULT: '#A084DC'
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
