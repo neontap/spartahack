@@ -184,11 +184,11 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
 
   return (
     <main className="w-full">
-<div className="bg-md-purple w-full border-t-2 border-purple-600/20 py-8 rounded-b-2xl shadow-md">
+      <div className="bg-md-purple w-full border-t-2 border-purple-600/20 py-8 rounded-b-2xl shadow-md">
         <div className="px-4 flex justify-between items-start">
           {/* Left side - University Info */}
           <div className="flex-1">
-            <h1 className="text-5xl font-extrabold">{university.name}</h1>
+            <h1 className="text-7xl font-roboto  font-extrabold">{university.name}</h1>
             <p className="text-lg py-2">East Lansing, MI</p>
             <p className="text-lg font-light py-2 underline">https://msu.edu</p>
           </div>
@@ -236,56 +236,56 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
           </div>
         </div>
       </div>
-{/* Centered Search Section */}
-<div className="flex justify-center mt-8">
-  <div className="space-y-4 rounded-xl px-8 max-w-3xl w-full">
-    <h1 className="text-3xl font-bold text-center">Search Your Course</h1>
+      {/* Centered Search Section */}
+      <div className="flex justify-center mt-8">
+        <div className="space-y-4 rounded-xl px-8 max-w-3xl w-full">
+          <h1 className="text-3xl font-bold text-center">Search Your Course</h1>
 
-    {/* Subject and Course Code Search */}
-    <div className="flex gap-4 items-center justify-center">
-      <Select onValueChange={setSubjectCode} value={subjectCode}>
-        <SelectTrigger className="w-40">
-          <SelectValue placeholder="Subject" />
-        </SelectTrigger>
-        <SelectContent>
-          {subjects.map((subject) => (
-            <SelectItem key={subject} value={subject}>
-              {subject}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+          {/* Subject and Course Code Search */}
+          <div className="flex gap-4 items-center justify-center">
+            <Select onValueChange={setSubjectCode} value={subjectCode}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Subject" />
+              </SelectTrigger>
+              <SelectContent>
+                {subjects.map((subject) => (
+                  <SelectItem key={subject} value={subject}>
+                    {subject}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-      <Input
-        placeholder="Course Code"
-        className="w-32"
-        value={courseCode}
-        onChange={(e) => setCourseCode(e.target.value)}
-      />
-    </div>
+            <Input
+              placeholder="Course Code"
+              className="w-32"
+              value={courseCode}
+              onChange={(e) => setCourseCode(e.target.value)}
+            />
+          </div>
 
-    <div className="flex items-center gap-4">
-      <div className="flex-1 h-px bg-gray-300"></div>
-      <span className="text-gray-500 font-medium">OR</span>
-      <div className="flex-1 h-px bg-gray-300"></div>
-    </div>
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-px bg-gray-300"></div>
+            <span className="text-gray-500 font-medium">OR</span>
+            <div className="flex-1 h-px bg-gray-300"></div>
+          </div>
 
-    {/* Course Name Search */}
-    <div className="flex gap-2 justify-center">
-      <div className="relative flex-1 max-w-md">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by course name"
-          className="pl-8"
-          value={courseName}
-          onChange={(e) => setCourseName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-        />
+          {/* Course Name Search */}
+          <div className="flex gap-2 justify-center">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by course name"
+                className="pl-8"
+                value={courseName}
+                onChange={(e) => setCourseName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
+            </div>
+            <Button onClick={handleSearch}>Search</Button>
+          </div>
+        </div>
       </div>
-      <Button onClick={handleSearch}>Search</Button>
-    </div>
-  </div>
-</div>
 
       {/* Course List */}
       <div className="w-full px-8 py-8">
@@ -333,11 +333,11 @@ function CourseCard({ course }: { course: Course }) {
             <div className="text-center">
 
               <span className="text-3xl text-rose-800 font-bold">
-               1.8 
+                1.8
               </span>
 
               <p className="text-md font-semibold">
-              avg grade
+                avg grade
               </p>
               <p className="text-sm text-muted-foreground">1 review</p>
             </div>

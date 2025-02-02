@@ -1,4 +1,6 @@
 "use client";
+
+import Link from "next/link";
 import React from 'react'
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -8,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import CourseAssistant from '@/components/CourseAssistant';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Card,
   CardHeader,
@@ -38,10 +47,20 @@ type Review = {
   id: number;
   course_id: number;
   rating: number;
+  difficulty_rating: number;
   comment: string;
   created_at: string;
 };
 
+// Add semester options
+const SEMESTERS = [
+  "Fall 2024",
+  "Summer 2024",
+  "Spring 2024",
+  "Fall 2023",
+  "Summer 2023",
+  "Spring 2023"
+];
 export default function CourseDetailPage() {
   // Initialize Supabase client with the new approach
   const supabase = createBrowserClient(
@@ -49,9 +68,32 @@ export default function CourseDetailPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+ // Helper function to determine quality rating color
+  const getQualityColor = (rating:number) => {
+    if (rating >= 4) return 'bg-green-600';
+    if (rating >= 3) return 'bg-yellow-400';
+    return 'bg-red-600';
+  };
+
+  // Helper function to determine difficulty rating color
+  const getDifficultyColor = (rating:number) => {
+    if (rating >= 4) return 'bg-red-600';
+    if (rating >= 2.5) return 'bg-yellow-400';
+    return 'bg-green-600';
+  };
+
+  // Helper function to determine workload color
+  const getWorkloadColor = (hours:number) => {
+    if (hours >= 15) return 'bg-red-600';
+    if (hours >= 10) return 'bg-yellow-400';
+    return 'bg-green-600';
+  };
   const params = useParams();
   const courseId = typeof params.courseId === "string" ? parseInt(params.courseId) : null;
 
+  const [selectedProfessor, setSelectedProfessor] = useState<string>("");
+
+  const [selectedSemester, setSelectedSemester] = useState<string>("Fall 2024");
   const [course, setCourse] = useState<Course | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -126,6 +168,7 @@ export default function CourseDetailPage() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      console.log('supabase review response', data)
       setReviews(data as Review[]);
     } catch (err) {
       console.error("Error fetching reviews:", err);
@@ -199,22 +242,70 @@ export default function CourseDetailPage() {
 
   return (
     <main className="mx-auto w-full">
-
       <div className="bg-md-purple w-full border-t-2 border-purple-600/20 py-8 rounded-b-2xl shadow-md">
-
         <div className="px-4 flex justify-between items-start">
           {/* Left side - University Info */}
           <div className="flex-1">
             <h1 className="text-5xl font-extrabold text-rbc-purple">{course.subject_code} {course.course_code} </h1>
             <p className="text-lg text-white font-semibold py-2">{course.title}</p>
+            <div className="flex gap-4 mt-4">
+              <div className="w-64">
+                <Select
+                  value={selectedProfessor}
+                  onValueChange={setSelectedProfessor}
+                >
+                  <SelectTrigger className="bg-white/90">
+                    <SelectValue placeholder="Select Professor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {course?.course_professors?.map((cp, index) => (
+                      <SelectItem
+                        key={index}
+                        value={cp.professors.full_name}
+                      >
+                        {cp.professors.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-48">
+                <Select
+                  value={selectedSemester}
+                  onValueChange={setSelectedSemester}
+                >
+                  <SelectTrigger className="bg-white/90">
+                    <SelectValue placeholder="Select Semester" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SEMESTERS.map((semester) => (
+                      <SelectItem
+                        key={semester}
+                        value={semester}
+                      >
+                        {semester}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
           {/* Right side - Statistics */}
           <div className="flex-1">
             {/* Student Count & Acceptance Rate */}
             <div className="flex justify-left gap-4 mb-2">
-              <div className="text-left">
-                <div className="text-4xl text-white font-bold">Average Grade</div>
-                <div className="text-3xl font-extrabold text-rbc-purple p-4 rounded-2xl w-16h-16 text-center bg-white/20">3.3</div>
+              <div className="flex justify-center">
+                <div className="text-left">
+                  <div className="text-4xl text-white font-bold">Average Grade</div>
+                  <div className="text-3xl font-extrabold text-rbc-purple p-4 rounded-2xl w-16h-16 text-center bg-white/20">3.3</div>
+                  <Link href={`/courses/${courseId}/review`}>
+                    <Button  className="font-semibold m-2 mt-4 " size={"lg"}>
+                      + Add a Review
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
 
@@ -225,7 +316,7 @@ export default function CourseDetailPage() {
       <div className="px-8 bg-slight-purple">
 
         <h1 className="text-4xl font-bold py-8 text-rbc-purple">Reviews</h1>
-        <Card>
+        <Card className="hidden">
           <CardHeader>
             <CardTitle>Submit Your Review</CardTitle>
             {!user && (
@@ -326,20 +417,26 @@ export default function CourseDetailPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-6">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Quality</span>
-                      <span className="bg-red-600 text-white px-3 py-1 rounded">2.0</span>
+                 <div className="flex flex-wrap gap-6">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Quality</span>
+                        <span className={`${getQualityColor(review.rating)} text-white px-3 py-1 rounded`}>
+                          {review.rating}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Difficulty</span>
+                        <span className={`${getDifficultyColor(review.difficulty_rating || 1)} text-white px-3 py-1 rounded`}>
+                          {review.difficulty_rating || 1}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Weekly Workload</span>
+                        <span className={`${getWorkloadColor(12)} text-white px-3 py-1 rounded`}>
+                          12 hrs
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Difficulty</span>
-                      <span className="bg-red-600 text-white px-3 py-1 rounded">5.0</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Weekly Workload</span>
-                      <span className="bg-yellow-400 text-white px-3 py-1 rounded">12 hrs</span>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -348,9 +445,6 @@ export default function CourseDetailPage() {
           <p>No reviews yet. Be the first to review!</p>
         )}
 
-      </div>
-      <div className="py-8">
-        <h2 className="text-2xl font-bold mb-4">Reviews</h2>
       </div>
       <CourseAssistant courseId={courseId!} />
     </main>
