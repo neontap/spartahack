@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import CourseAssistant from '@/components/CourseAssistant';
 import {
   Card,
   CardHeader,
@@ -351,6 +352,7 @@ export default function CourseDetailPage() {
       <div className="py-8">
         <h2 className="text-2xl font-bold mb-4">Reviews</h2>
       </div>
+      <CourseAssistant courseId={courseId!} />
     </main>
   );
 }
