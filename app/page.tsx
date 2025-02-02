@@ -86,7 +86,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen mt-36 relative">
       <div className="fixed inset-0 z-0">
         <Image 
           src="/bg-landing.svg"
