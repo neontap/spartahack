@@ -41,10 +41,8 @@ type University = {
 };
 
 type PageProps = {
-  params: Promise<{
-    universityId: string;
-  }>;
-  searchParams?: { [key: string]: string | string[] | undefined };
+  params: Promise<{ universityId: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export default function UniversityPage({ params, searchParams }: PageProps) {
