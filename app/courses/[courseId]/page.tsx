@@ -219,9 +219,7 @@ export default function CourseDetailPage() {
 
   return (
     <main className="mx-auto w-full">
-
       <div className="bg-md-purple w-full border-t-2 border-purple-600/20 py-8 rounded-b-2xl shadow-md">
-
         <div className="px-4 flex justify-between items-start">
           {/* Left side - University Info */}
           <div className="flex-1">
@@ -295,7 +293,7 @@ export default function CourseDetailPage() {
       <div className="px-8 bg-slight-purple">
 
         <h1 className="text-4xl font-bold py-8 text-rbc-purple">Reviews</h1>
-        <Card className="hidden">
+        <Card className="">
           <CardHeader>
             <CardTitle>Submit Your Review</CardTitle>
             {!user && (
