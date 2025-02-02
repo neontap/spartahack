@@ -113,7 +113,11 @@ export default function HomePage() {
             <Popover open={open} onOpenChange={setOpen}>
               <div className="relative w-96" onClick={handleContainerClick}>
                 <PopoverTrigger asChild>
-                  <div className="relative w-full">
+                  <div className="relative w-full" onClick={(e) => {
+                    e.preventDefault();
+                    inputRef.current?.focus();
+                    setOpen(true);
+                  }}>
                     <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500 pointer-events-none z-10"/>
                     <Input
                         ref={inputRef}
@@ -121,6 +125,7 @@ export default function HomePage() {
                         className="w-full pl-9 pr-4 h-10 bg-white/80 backdrop-blur-sm"
                         value={searchQuery}
                         onChange={(e) => handleSearchChange(e.target.value)}
+                        onFocus={() => setOpen(true)}
                     />
                   </div>
                 </PopoverTrigger>
