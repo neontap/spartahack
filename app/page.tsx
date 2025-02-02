@@ -135,18 +135,19 @@ return (
         <div className="space-y-4">
           <div className="flex gap-2">
             <div className="relative w-full flex justify-center">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search for your university"
-                className="pl-8 w-96"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              />
+              <div className="relative"> {/* Changed to relative */}
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" /> {/* Added absolute */}
+                <Input
+                  placeholder="Search for your university"
+                  className="pl-8 w-96"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                />
+              </div>
             </div>
           </div>
         </div>
-
         {/* Universities List */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
