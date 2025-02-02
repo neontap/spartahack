@@ -188,7 +188,7 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
         <div className="px-4 flex justify-between items-start">
           {/* Left side - University Info */}
           <div className="flex-1">
-            <h1 className="text-5xl font-extrabold">{university.name}</h1>
+            <h1 className="text-7xl font-roboto  font-extrabold">{university.name}</h1>
             <p className="text-lg py-2">East Lansing, MI</p>
             <p className="text-lg font-light py-2 underline">https://msu.edu</p>
           </div>
