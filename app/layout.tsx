@@ -41,14 +41,15 @@ export default function RootLayout({
               <nav className="w-full z-50 bg-md-purple flex justify-center  h-16">
                 <div className="w-full max-w-full flex justify-between items-center p-3 px-5 text-sm">
                   <div className="flex gap-5 items-center font-semibold">
-                    <Image 
-                      src="coursecheckminilogo.svg" 
-                      className="mt-2"
-                      width={66} 
-                      height={52} 
-                      alt="Course Checker logo"
-                    />
-                    <Link href="/" />
+                    <Link href="/">
+                      <Image
+                          src="coursecheckminilogo.svg"
+                          className="mt-2"
+                          width={66}
+                          height={52}
+                          alt="Course Checker logo"
+                      />
+                    </Link>
                   </div>
                   {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
                 </div>
