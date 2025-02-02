@@ -21,7 +21,7 @@ const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const CourseReviewForm = ({ courseId2 }) => {
+const CourseReviewForm = () => {
   const [formData, setFormData] = useState({
     professor: "",
     semester: "",

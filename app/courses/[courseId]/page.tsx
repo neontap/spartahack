@@ -278,7 +278,7 @@ export default function CourseDetailPage() {
                   <div className="text-4xl text-white font-bold">Average Grade</div>
                   <div className="text-3xl font-extrabold text-rbc-purple p-4 rounded-2xl w-16h-16 text-center bg-white/20">3.3</div>
                   <Link href={`/courses/${courseId}/review`}>
-                    <Button  variant="" className="font-semibold m-2 mt-4 " size={"lg"}>
+                    <Button  className="font-semibold m-2 mt-4 " size={"lg"}>
                       + Add a Review
                     </Button>
                   </Link>
