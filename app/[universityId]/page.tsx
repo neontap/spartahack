@@ -32,6 +32,8 @@ type Course = {
   subject_code: string;
   title: string;
   historical_average_grade: number | null;
+  average_rating: number | null;
+  review_count: number;
   universities: {
     name: string;
   };
@@ -39,6 +41,10 @@ type Course = {
     professors: {
       full_name: string;
     };
+  }[];
+  reviews: {
+    rating: number;
+    is_deleted: boolean;
   }[];
 };
 
@@ -63,6 +69,7 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
   const [subjects, setSubjects] = useState<string[]>([]);
   const [page, setPage] = useState<number>(1);
   const pageSize = 10;
+
 
   const fetchSubjects = async () => {
     try {
@@ -125,6 +132,10 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
             professors!inner (
               full_name
             )
+          ),
+          course_reviews (
+            rating,
+            is_deleted
           )
         `)
         .eq("university_id", universityId)
@@ -137,13 +148,30 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
       }
 
       const { data, error } = await query;
-
+      console.log('response', data)
       if (error) {
         console.error("Error fetching courses:", error);
         return;
       }
 
-      setCourses((data as unknown as Course[]) || []);
+      // Process the data to calculate average ratings
+      const processedData = (data || []).map(course => {
+        const validReviews = course.course_reviews?.filter(r => !r.is_deleted) || [];
+        const reviewCount = validReviews.length;
+        const averageRating = reviewCount > 0
+          ? validReviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviewCount
+          : null;
+
+        return {
+          ...course,
+          average_rating: averageRating,
+          review_count: reviewCount,
+
+          reviews: validReviews, // or reviews: course.course_reviews if you prefer
+        };
+      });
+
+      setCourses(processedData );
     } catch (error) {
       console.error("Error:", error);
     } finally {
@@ -188,7 +216,7 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
         <div className="px-4 flex justify-between items-start">
           {/* Left side - University Info */}
           <div className="flex-1">
-            <h1 className="text-7xl font-roboto  font-extrabold">{university.name}</h1>
+            <h1 className="text-7xl font-roboto font-extrabold">{university.name}</h1>
             <p className="text-lg py-2">East Lansing, MI</p>
             <p className="text-lg font-light py-2 underline">https://msu.edu</p>
           </div>
@@ -217,7 +245,7 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
               </div>
 
               <div className="text-left ml-20">
-                <span className="font-bold  text-4xl text-white">$43,502</span>
+                <span className="font-bold text-4xl text-white">$43,502</span>
                 <div className="text-xl font-bold">out-of-state</div>
               </div>
             </div>
@@ -236,8 +264,9 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
           </div>
         </div>
       </div>
+
       {/* Centered Search Section */}
-      <div className="flex justify-center mt-8">
+      <div className="flex justify-center mt-8 bg-slight-purple">
         <div className="space-y-4 rounded-xl px-8 max-w-3xl w-full">
           <h1 className="text-3xl font-bold text-center">Search Your Course</h1>
 
@@ -288,11 +317,11 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
       </div>
 
       {/* Course List */}
-      <div className="w-full px-8 py-8">
+      <div className="w-full px-8 py-8 bg-slight-purple">
         {loading ? (
           <p>Loading...</p>
         ) : courses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 bg-slight-purple gap-6 w-full">
             {courses.map((course) => (
               <CourseCard key={course.id} course={course} />
             ))}
@@ -321,6 +350,11 @@ function CourseCard({ course }: { course: Course }) {
   const instructor =
     course.course_professors?.[0]?.professors?.full_name || "Unknown Instructor";
 
+  const getQualityColor = (rating:any) => {
+    if (rating >= 3) return 'text-green-600';
+    if (rating >= 2) return 'text-yellow-400';
+    return 'text-red-600';
+  };
   return (
     <Link href={`/courses/${course.id}`} className="block no-underline">
       <Card className="hover:bg-accent/50 transition-colors bg-white shadow-md border-none cursor-pointer">
@@ -331,15 +365,14 @@ function CourseCard({ course }: { course: Course }) {
               <CardDescription className="mt-1 text-rbc-purple font-semibold">{course.title}</CardDescription>
             </div>
             <div className="text-center">
+              <span className={`text-3xl ${getQualityColor(course.average_rating ? course.average_rating.toFixed(1) : '0')} text-rose-800 font-bold`}>
 
-              <span className="text-3xl text-rose-800 font-bold">
-                1.8
+                {course.average_rating ? course.average_rating.toFixed(1) : 'N/A'}
               </span>
-
               <p className="text-md font-semibold">
-                avg grade
+                rating
               </p>
-              <p className="text-sm text-muted-foreground">1 review</p>
+              <p className="text-sm text-muted-foreground">{course.review_count} {course.review_count === 1 ? 'review' : 'reviews'}</p>
             </div>
           </div>
         </CardHeader>
