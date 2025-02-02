@@ -1,6 +1,6 @@
 "use client";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,17 @@ type University = {
   name: string;
 };
 
-export default function UniversityPage({ params }: { params: { universityId: string } }) {
+type PageProps = {
+  params: Promise<{
+    universityId: string;
+  }>;
+  searchParams?: { [key: string]: string | string[] | undefined };
+};
+
+export default function UniversityPage({ params, searchParams }: PageProps) {
+  // Unwrap the params promise using React.use()
+  const { universityId } = React.use(params);
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [university, setUniversity] = useState<University | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -48,13 +58,12 @@ export default function UniversityPage({ params }: { params: { universityId: str
   const [page, setPage] = useState<number>(1);
   const pageSize = 10;
 
-  // Fetch university details
   const fetchUniversity = async () => {
     try {
       const { data, error } = await supabase
         .from("universities")
         .select("id, name")
-        .eq("id", params.universityId)
+        .eq("id", universityId)
         .single();
 
       if (error) {
@@ -93,7 +102,7 @@ export default function UniversityPage({ params }: { params: { universityId: str
           )
         `
         )
-        .eq("university_id", params.universityId)
+        .eq("university_id", universityId)
         .range(fromIndex, toIndex);
 
       if (search) {
@@ -117,18 +126,15 @@ export default function UniversityPage({ params }: { params: { universityId: str
     }
   };
 
-  // Initial fetch of university details
   useEffect(() => {
     fetchUniversity();
-  }, [params.universityId]);
+  }, [universityId]);
 
-  // Reset to page 1 when searchQuery changes
   useEffect(() => {
     setPage(1);
     fetchCourses(searchQuery, 1);
   }, [searchQuery]);
 
-  // Fetch courses when page changes
   useEffect(() => {
     fetchCourses(searchQuery, page);
   }, [page]);
@@ -206,10 +212,7 @@ function CourseCard({ course }: { course: Course }) {
     course.course_professors?.[0]?.professors?.full_name || "Unknown Instructor";
 
   return (
-    <Link 
-      href={`/courses/${course.id}`}
-      className="block no-underline"
-    >
+    <Link href={`/courses/${course.id}`} className="block no-underline">
       <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
         <CardHeader>
           <div className="flex justify-between items-start">
