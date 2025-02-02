@@ -144,7 +144,7 @@ const CourseReviewForm = () => {
           </div>
         </div>
       </div>
-      <Card className="w-full mt-4 max-w-2xl mx-auto p-6 bg-white/50 backdrop-blur">
+      <Card className="w-full my-4 max-w-2xl mx-auto p-6 bg-white/50 backdrop-blur">
         <CardContent>
           {submissionError && (
             <p className="text-red-600">{submissionError}</p>
