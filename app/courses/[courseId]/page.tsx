@@ -287,8 +287,8 @@ export default function CourseDetailPage() {
               <Card className="bg-white rounded-3xl px-4 mx-4 my-2 shadow-md border-none" key={review.id}>
                 <CardHeader>
                   <div className="flex justify-between items-center">
-                  {/*<CardTitle>Rating: {review.rating.toFixed(1)}</CardTitle> */}
-                  <CardTitle className="text-2xl">Professor <span className="text-glow-purple">{instructor} </span> <span className="text-sm font-semibold mx-2 text-rpc-purple">FALL 2024</span></CardTitle>
+                    {/*<CardTitle>Rating: {review.rating.toFixed(1)}</CardTitle> */}
+                    <CardTitle className="text-2xl">Professor <span className="text-glow-purple">{instructor} </span> <span className="text-sm font-semibold mx-2 text-rpc-purple">FALL 2024</span></CardTitle>
                     <CardDescription>
                       {new Date(review.created_at).toLocaleDateString()}
                     </CardDescription>
@@ -296,6 +296,49 @@ export default function CourseDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <p>{review.comment}</p>
+                  <div className="flex flex-wrap gap-4 mt-4 items-center mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Grade received:</span>
+                      <span className="text-glow-purple">2.5</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Would you recommend:</span>
+                      <span className="text-glow-purple">No</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Class format:</span>
+                      <span className="text-glow-purple">In-person</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Mandatory Attendance:</span>
+                      <span className="text-glow-purple">Yes</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Textbook requirement:</span>
+                      <span className="text-glow-purple">No</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-500">3</span>
+                      <span className="text-gray-500">👍</span>
+                      <span className="text-red-500">0</span>
+                      <span className="text-gray-500">👎</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-6">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Quality</span>
+                      <span className="bg-red-600 text-white px-3 py-1 rounded">2.0</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Difficulty</span>
+                      <span className="bg-red-600 text-white px-3 py-1 rounded">5.0</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Weekly Workload</span>
+                      <span className="bg-yellow-400 text-white px-3 py-1 rounded">12 hrs</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
