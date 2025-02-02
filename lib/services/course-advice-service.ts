@@ -127,9 +127,8 @@ Please provide detailed advice based on the above information. Consider the prer
                                 content: `You are a helpful academic advisor with extensive knowledge about university courses. 
               When providing advice, always follow this format:
         
-              1. Start with a brief "Quick Stats" section showing key metrics
-              2. Then provide a "Key Takeaways" section with 3-4 bullet points
-              3. Finally, give detailed advice in these sections:
+              1. Then provide a "Key Takeaways" section with 3-4 bullet points
+              2. Finally, give detailed advice in these sections:
                  - "Course Overview" (2-3 sentences max)
                  - "Before Taking This Course"
                  - "During the Course"
