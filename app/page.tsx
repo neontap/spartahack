@@ -146,7 +146,7 @@ export default function HomePage() {
                         setSelectedUniversity(university);
                         setSearchQuery(university.name);
                         setOpen(false);
-                        router.push(`/universities/${university.id}`);
+                        router.push(`/${university.id}`);
                       }}
                       className="cursor-pointer"
                     >

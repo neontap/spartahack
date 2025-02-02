@@ -19,7 +19,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Updated types based on Supabase's returned data shape
 type Course = {
   id: number;
   course_code: string;
@@ -36,12 +35,38 @@ type Course = {
   }[];
 };
 
-export default function HomePage() {
+type University = {
+  id: number;
+  name: string;
+};
+
+export default function UniversityPage({ params }: { params: { universityId: string } }) {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [university, setUniversity] = useState<University | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [page, setPage] = useState<number>(1);
-  const pageSize = 10; // Adjust page size as needed
+  const pageSize = 10;
+
+  // Fetch university details
+  const fetchUniversity = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("universities")
+        .select("id, name")
+        .eq("id", params.universityId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching university:", error);
+        return;
+      }
+
+      setUniversity(data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
   const fetchCourses = async (search?: string, currentPage: number = page) => {
     setLoading(true);
@@ -66,13 +91,11 @@ export default function HomePage() {
               full_name
             )
           )
-        `,
-          // You can also request count if needed, e.g. { count: 'exact' }
+        `
         )
-        .eq("universities.name", "Michigan State University")
+        .eq("university_id", params.universityId)
         .range(fromIndex, toIndex);
 
-      // Add search filter if provided
       if (search) {
         query = query.or(
           `course_code.ilike.%${search}%,title.ilike.%${search}%`
@@ -86,7 +109,6 @@ export default function HomePage() {
         return;
       }
 
-      console.log("Raw Supabase response:", JSON.stringify(data, null, 2));
       setCourses((data as unknown as Course[]) || []);
     } catch (error) {
       console.error("Error:", error);
@@ -95,7 +117,12 @@ export default function HomePage() {
     }
   };
 
-  // Reset to page 1 when searchQuery changes (if needed)
+  // Initial fetch of university details
+  useEffect(() => {
+    fetchUniversity();
+  }, [params.universityId]);
+
+  // Reset to page 1 when searchQuery changes
   useEffect(() => {
     setPage(1);
     fetchCourses(searchQuery, 1);
@@ -112,7 +139,6 @@ export default function HomePage() {
   };
 
   const handleNextPage = () => {
-    // Only move to the next page if we fetched a full page of results.
     if (courses.length === pageSize) {
       setPage((prev) => prev + 1);
     }
@@ -124,11 +150,15 @@ export default function HomePage() {
     }
   };
 
+  if (!university) {
+    return <div className="container mx-auto py-6">Loading university details...</div>;
+  }
+
   return (
-    <main className="container  mx-auto py-6 space-y-8">
+    <main className="container mx-auto py-6 space-y-8">
       {/* Search Section */}
       <div className="space-y-4">
-        <h1 className="text-lg">Michigan State University</h1>
+        <h1 className="text-lg">{university.name}</h1>
         <h1 className="text-4xl font-bold">Find Your Course</h1>
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -172,41 +202,37 @@ export default function HomePage() {
 
 // Course Card Component
 function CourseCard({ course }: { course: Course }) {
-  // Extract instructor from course_professors; since 'professors' is an object:
   const instructor =
     course.course_professors?.[0]?.professors?.full_name || "Unknown Instructor";
-
-  // 'universities' is an object
-  const universityName = course.universities?.name || "Unknown University";
 
   return (
     <Link 
       href={`/courses/${course.id}`}
-      className="block no-underline" // Remove default link styling
+      className="block no-underline"
     >
-    <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>{course.subject_code} {course.course_code}</CardTitle>
-            <CardDescription className="mt-1">{course.title}</CardDescription>
+      <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>{course.subject_code} {course.course_code}</CardTitle>
+              <CardDescription className="mt-1">{course.title}</CardDescription>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-bold">
+                {course.historical_average_grade !== null
+                  ? course.historical_average_grade.toFixed(1)
+                  : "N/A"}
+              </span>
+              <p className="text-sm text-muted-foreground">1 review</p>
+            </div>
           </div>
-          <div className="text-right">
-            <span className="text-2xl font-bold">
-              {course.historical_average_grade !== null
-                ? course.historical_average_grade.toFixed(1)
-                : "N/A"}
-            </span>
-            <p className="text-sm text-muted-foreground">1 review</p>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">
-          {instructor}
-        </p>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            {instructor}
+          </p>
+        </CardContent>
+      </Card>
     </Link>
   );
 }
