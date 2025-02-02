@@ -1,18 +1,13 @@
 "use client";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import Image from 'next/image';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
-import { Search } from "lucide-react";
+import { useRouter } from 'next/navigation';
+import { Command, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Check, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -20,7 +15,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Updated type for universities
 type University = {
   id: number;
   name: string;
@@ -29,18 +23,17 @@ type University = {
 };
 
 export default function HomePage() {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [universities, setUniversities] = useState<University[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [page, setPage] = useState<number>(1);
-  const pageSize = 10;
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const fetchUniversities = async (search?: string, currentPage: number = page) => {
+  const fetchUniversities = async (search?: string) => {
     setLoading(true);
     try {
-      const fromIndex = (currentPage - 1) * pageSize;
-      const toIndex = currentPage * pageSize - 1;
-
       let query = supabase
         .from("universities")
         .select(`
@@ -49,9 +42,8 @@ export default function HomePage() {
           location,
           courses(count)
         `)
-        .range(fromIndex, toIndex);
+        .limit(100);
 
-      // Add search filter if provided
       if (search) {
         query = query.ilike('name', `%${search}%`);
       }
@@ -63,7 +55,6 @@ export default function HomePage() {
         return;
       }
 
-      // Transform the data to include course count
       const universitiesWithCounts = data?.map(uni => ({
         ...uni,
         course_count: uni.courses?.[0]?.count || 0
@@ -77,37 +68,25 @@ export default function HomePage() {
     }
   };
 
-  // Reset to page 1 when searchQuery changes
   useEffect(() => {
-    setPage(1);
-    fetchUniversities(searchQuery, 1);
-  }, [searchQuery]);
+    fetchUniversities();
+  }, []);
 
-  // Fetch universities when page changes
-  useEffect(() => {
-    fetchUniversities(searchQuery, page);
-  }, [page]);
-
-  const handleSearch = () => {
-    setPage(1);
-    fetchUniversities(searchQuery, 1);
+  // Handle search input changes
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (!open) setOpen(true);
+    fetchUniversities(value);
   };
 
-  const handleNextPage = () => {
-    if (universities.length === pageSize) {
-      setPage((prev) => prev + 1);
-    }
+  // Handle click on the input container to maintain focus
+  const handleContainerClick = () => {
+    inputRef.current?.focus();
+    setOpen(true);
   };
 
-  const handlePreviousPage = () => {
-    if (page > 1) {
-      setPage((prev) => prev - 1);
-    }
-  };
-
-return (
+  return (
     <div className="min-h-screen relative">
-      {/* Background Image */}
       <div className="fixed inset-0 z-0">
         <Image 
           src="/bg-landing.svg"
@@ -119,7 +98,6 @@ return (
         />
       </div>
 
-      {/* Main Content */}
       <main className="relative z-10 container mx-auto py-6 space-y-8">
         <div className="flex justify-center">
           <Image 
@@ -131,59 +109,65 @@ return (
           />
         </div>
         
-        {/* Search Section */}
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <div className="relative w-full flex justify-center">
-              <div className="relative"> {/* Changed to relative */}
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" /> {/* Added absolute */}
-                <Input
-                  placeholder="Search for your university"
-                  className="pl-8 w-96"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                />
-              </div>
+        <div className="flex justify-center w-full">
+          <Popover open={open} onOpenChange={setOpen}>
+            <div className="relative w-96" onClick={handleContainerClick}>
+              <PopoverTrigger asChild>
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500 pointer-events-none z-10" />
+                  <Input
+                    ref={inputRef}
+                    placeholder="Search for your university..."
+                    className="w-full pl-9 pr-4 h-10 bg-white/80 backdrop-blur-sm"
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                  />
+                </div>
+              </PopoverTrigger>
             </div>
-          </div>
-        </div>
-        {/* Universities List */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {loading ? (
-            <p>Loading...</p>
-          ) : universities.length > 0 ? (
-            universities.map((university) => (
-              <Link href={`/universities/${university.id}`} key={university.id}>
-                <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full backdrop-blur-sm bg-white/80">
-                  <CardHeader>
-                    <CardTitle>{university.name}</CardTitle>
-                    {university.location && (
-                      <CardDescription>{university.location}</CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      {university.course_count} courses available
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
-          ) : (
-            <p>No universities found.</p>
-          )}
-        </div>
-
-        {/* Pagination Controls */}
-        <div className="flex justify-center gap-4 mt-8">
-          <Button onClick={handlePreviousPage} disabled={page === 1}>
-            Previous
-          </Button>
-          <span className="self-center">Page {page}</span>
-          <Button onClick={handleNextPage} disabled={universities.length < pageSize}>
-            Next
-          </Button>
+            <PopoverContent 
+              className="w-96 p-0" 
+              align="start"
+              onInteractOutside={(e) => {
+                // Only close if clicking outside the popover and input
+                if (!(e.target as HTMLElement).closest('.search-container')) {
+                  setOpen(false);
+                }
+              }}
+            >
+              <Command>
+                <CommandEmpty>No university found.</CommandEmpty>
+                <CommandGroup className="max-h-64 overflow-y-auto">
+                  {universities.map((university) => (
+                    <CommandItem
+                      key={university.id}
+                      value={university.name}
+                      onSelect={() => {
+                        setSelectedUniversity(university);
+                        setSearchQuery(university.name);
+                        setOpen(false);
+                        router.push(`/universities/${university.id}`);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedUniversity?.id === university.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div>
+                        <div>{university.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {university.location} • {university.course_count} courses
+                        </div>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
       </main>
     </div>
