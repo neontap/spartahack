@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
+import _ from 'lodash';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -62,7 +63,8 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
   const { universityId } = React.use(params);
   const [courses, setCourses] = useState<Course[]>([]);
   const [university, setUniversity] = useState<University | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [subjectCode, setSubjectCode] = useState<string>("");
   const [courseCode, setCourseCode] = useState<string>("");
   const [courseName, setCourseName] = useState<string>("");
@@ -70,6 +72,13 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
   const [page, setPage] = useState<number>(1);
   const pageSize = 10;
 
+  // Debounced search function
+  const debouncedFetchCourses = useCallback(
+    _.debounce((currentPage: number, subject: string, code: string, name: string) => {
+      fetchCourses(currentPage, subject, code, name);
+    }, 300),
+    []
+  );
 
   const fetchSubjects = async () => {
     try {
@@ -111,8 +120,16 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
     }
   };
 
-  const fetchCourses = async (currentPage: number = page) => {
-    setLoading(true);
+  const fetchCourses = async (
+    currentPage: number = page,
+    currentSubject: string = subjectCode,
+    currentCourseCode: string = courseCode,
+    currentCourseName: string = courseName
+  ) => {
+    if (!initialLoading) {
+      setLoading(true);
+    }
+    
     try {
       const fromIndex = (currentPage - 1) * pageSize;
       const toIndex = currentPage * pageSize - 1;
@@ -141,20 +158,21 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
         .eq("university_id", universityId)
         .range(fromIndex, toIndex);
 
-      if (subjectCode && courseCode) {
-        query = query.eq("subject_code", subjectCode).ilike("course_code", `%${courseCode}%`);
-      } else if (courseName) {
-        query = query.ilike("title", `%${courseName}%`);
+      if (currentSubject && currentCourseCode) {
+        query = query
+          .eq("subject_code", currentSubject)
+          .ilike("course_code", `%${currentCourseCode}%`);
+      } else if (currentCourseName) {
+        query = query.ilike("title", `%${currentCourseName}%`);
       }
 
       const { data, error } = await query;
-      console.log('response', data)
+
       if (error) {
         console.error("Error fetching courses:", error);
         return;
       }
 
-      // Process the data to calculate average ratings
       const processedData = (data || []).map(course => {
         const validReviews = course.course_reviews?.filter(r => !r.is_deleted) || [];
         const reviewCount = validReviews.length;
@@ -166,91 +184,95 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
           ...course,
           average_rating: averageRating,
           review_count: reviewCount,
-
-          reviews: validReviews, // or reviews: course.course_reviews if you prefer
+          reviews: validReviews,
         };
       });
 
-      setCourses(processedData );
+      setCourses(processedData);
     } catch (error) {
       console.error("Error:", error);
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUniversity();
-    fetchSubjects();
+    const initializePage = async () => {
+      await Promise.all([fetchUniversity(), fetchSubjects()]);
+      await fetchCourses(1);
+    };
+    initializePage();
   }, [universityId]);
 
   useEffect(() => {
     setPage(1);
-    fetchCourses(1);
+    debouncedFetchCourses(1, subjectCode, courseCode, courseName);
+    
+    return () => {
+      debouncedFetchCourses.cancel();
+    };
   }, [subjectCode, courseCode, courseName]);
 
   const handleSearch = () => {
     setPage(1);
-    fetchCourses(1);
+    debouncedFetchCourses.cancel();
+    fetchCourses(1, subjectCode, courseCode, courseName);
   };
 
   const handleNextPage = () => {
     if (courses.length === pageSize) {
-      setPage((prev) => prev + 1);
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchCourses(nextPage);
     }
   };
 
   const handlePreviousPage = () => {
     if (page > 1) {
-      setPage((prev) => prev - 1);
+      const prevPage = page - 1;
+      setPage(prevPage);
+      fetchCourses(prevPage);
     }
   };
 
-  if (!university) {
+  if (initialLoading) {
     return <div className="container mx-auto py-6">Loading university details...</div>;
   }
 
   return (
     <main className="w-full">
+      {/* University Header Section */}
       <div className="bg-md-purple w-full border-t-2 border-purple-600/20 py-8 rounded-b-2xl shadow-md">
         <div className="px-4 flex justify-between items-start">
-          {/* Left side - University Info */}
           <div className="flex-1">
-            <h1 className="text-7xl font-roboto font-extrabold">{university.name}</h1>
+            <h1 className="text-7xl font-roboto font-extrabold">{university?.name}</h1>
             <p className="text-lg py-2">East Lansing, MI</p>
             <p className="text-lg font-light py-2 underline">https://msu.edu</p>
           </div>
-          {/* Right side - Statistics */}
           <div className="flex-1">
-            {/* Student Count & Acceptance Rate */}
             <div className="flex justify-left gap-4 mb-2">
               <div className="text-left">
                 <div className="text-4xl text-white font-bold">51,316</div>
                 <div className="text-xl font-bold">students</div>
               </div>
             </div>
-
             <div className="flex justify-left gap-4 mb-2">
               <div className="text-right">
                 <div className="text-4xl text-white text-left font-bold">88%</div>
                 <div className="text-xl font-bold">acceptance rate</div>
               </div>
             </div>
-
-            {/* Tuition */}
             <div className="flex justify-left gap-4 mb-2">
               <div className="text-left">
                 <div className="text-4xl text-white text-left font-bold">$16,118</div>
                 <div className="text-xl font-bold">in-state</div>
               </div>
-
               <div className="text-left ml-20">
                 <span className="font-bold text-4xl text-white">$43,502</span>
                 <div className="text-xl font-bold">out-of-state</div>
               </div>
             </div>
-
-            {/* Rankings */}
             <div className="flex justify-left gap-4">
               <div className="text-left">
                 <div className="text-4xl font-bold text-white">#30</div>
@@ -265,12 +287,10 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
         </div>
       </div>
 
-      {/* Centered Search Section */}
+      {/* Search Section */}
       <div className="flex justify-center mt-8 bg-slight-purple">
         <div className="space-y-4 rounded-xl px-8 max-w-3xl w-full">
           <h1 className="text-3xl font-bold text-center">Search Your Course</h1>
-
-          {/* Subject and Course Code Search */}
           <div className="flex gap-4 items-center justify-center">
             <Select onValueChange={setSubjectCode} value={subjectCode}>
               <SelectTrigger className="w-40">
@@ -284,7 +304,6 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
                 ))}
               </SelectContent>
             </Select>
-
             <Input
               placeholder="Course Code"
               className="w-32"
@@ -292,14 +311,11 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
               onChange={(e) => setCourseCode(e.target.value)}
             />
           </div>
-
           <div className="flex items-center gap-4">
             <div className="flex-1 h-px bg-gray-300"></div>
             <span className="text-gray-500 font-medium">OR</span>
             <div className="flex-1 h-px bg-gray-300"></div>
           </div>
-
-          {/* Course Name Search */}
           <div className="flex gap-2 justify-center">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -317,11 +333,15 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
       </div>
 
       {/* Course List */}
-      <div className="w-full px-8 py-8 bg-slight-purple">
+      <div className="w-full px-8 py-8 bg-slight-purple min-h-[400px]">
         {loading ? (
-          <p>Loading...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full opacity-50">
+            {courses.map((course) => (
+              <CourseCard key={course.id} course={course} />
+            ))}
+          </div>
         ) : courses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 bg-slight-purple gap-6 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
             {courses.map((course) => (
               <CourseCard key={course.id} course={course} />
             ))}
@@ -331,13 +351,13 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
         )}
       </div>
 
-      {/* Pagination Controls */}
+      {/* Pagination */}
       <div className="flex justify-center gap-4 mt-8 mb-8">
-        <Button onClick={handlePreviousPage} disabled={page === 1}>
+        <Button onClick={handlePreviousPage} disabled={page === 1 || loading}>
           Previous
         </Button>
         <span className="self-center">Page {page}</span>
-        <Button onClick={handleNextPage} disabled={courses.length < pageSize}>
+        <Button onClick={handleNextPage} disabled={courses.length < pageSize || loading}>
           Next
         </Button>
       </div>
@@ -345,34 +365,37 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
   );
 }
 
-// Course Card Component
 function CourseCard({ course }: { course: Course }) {
   const instructor =
     course.course_professors?.[0]?.professors?.full_name || "Unknown Instructor";
 
-  const getQualityColor = (rating:any) => {
+  const getQualityColor = (rating: any) => {
     if (rating >= 3) return 'text-green-600';
     if (rating >= 2) return 'text-yellow-400';
     return 'text-red-600';
   };
+
   return (
     <Link href={`/courses/${course.id}`} className="block no-underline">
       <Card className="hover:bg-accent/50 transition-colors bg-white shadow-md border-none cursor-pointer">
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="text-rbc-purple/80">{course.subject_code} {course.course_code}</CardTitle>
-              <CardDescription className="mt-1 text-rbc-purple font-semibold">{course.title}</CardDescription>
+              <CardTitle className="text-rbc-purple/80">
+                {course.subject_code} {course.course_code}
+              </CardTitle>
+              <CardDescription className="mt-1 text-rbc-purple font-semibold">
+                {course.title}
+              </CardDescription>
             </div>
             <div className="text-center">
               <span className={`text-3xl ${getQualityColor(course.average_rating ? course.average_rating.toFixed(1) : '0')} text-rose-800 font-bold`}>
-
                 {course.average_rating ? course.average_rating.toFixed(1) : 'N/A'}
               </span>
-              <p className="text-md font-semibold">
-                rating
+              <p className="text-md font-semibold">rating</p>
+              <p className="text-sm text-muted-foreground">
+                {course.review_count} {course.review_count === 1 ? 'review' : 'reviews'}
               </p>
-              <p className="text-sm text-muted-foreground">{course.review_count} {course.review_count === 1 ? 'review' : 'reviews'}</p>
             </div>
           </div>
         </CardHeader>
