@@ -1,7 +1,5 @@
-import DeployButton from "@/components/deploy-button";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import HeaderAuth from "@/components/header-auth";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import Image from 'next/image';
 import { Geist } from "next/font/google";
@@ -62,7 +60,6 @@ export default function RootLayout({
                 <p>
                   Developed for SpartaHack X
                 </p>
-                <ThemeSwitcher />
               </footer>
             </div>
           </main>
