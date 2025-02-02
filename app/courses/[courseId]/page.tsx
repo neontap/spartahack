@@ -46,6 +46,7 @@ type Review = {
   id: number;
   course_id: number;
   rating: number;
+  difficulty_rating: number;
   comment: string;
   created_at: string;
 };
@@ -66,6 +67,26 @@ export default function CourseDetailPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+ // Helper function to determine quality rating color
+  const getQualityColor = (rating:number) => {
+    if (rating >= 4) return 'bg-green-600';
+    if (rating >= 3) return 'bg-yellow-400';
+    return 'bg-red-600';
+  };
+
+  // Helper function to determine difficulty rating color
+  const getDifficultyColor = (rating:number) => {
+    if (rating >= 4) return 'bg-red-600';
+    if (rating >= 2.5) return 'bg-yellow-400';
+    return 'bg-green-600';
+  };
+
+  // Helper function to determine workload color
+  const getWorkloadColor = (hours:number) => {
+    if (hours >= 15) return 'bg-red-600';
+    if (hours >= 10) return 'bg-yellow-400';
+    return 'bg-green-600';
+  };
   const params = useParams();
   const courseId = typeof params.courseId === "string" ? parseInt(params.courseId) : null;
 
@@ -146,6 +167,7 @@ export default function CourseDetailPage() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      console.log('supabase review response', data)
       setReviews(data as Review[]);
     } catch (err) {
       console.error("Error fetching reviews:", err);
@@ -394,20 +416,26 @@ export default function CourseDetailPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-6">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Quality</span>
-                      <span className="bg-red-600 text-white px-3 py-1 rounded">2.0</span>
+                 <div className="flex flex-wrap gap-6">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Quality</span>
+                        <span className={`${getQualityColor(review.rating)} text-white px-3 py-1 rounded`}>
+                          {review.rating}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Difficulty</span>
+                        <span className={`${getDifficultyColor(review.difficulty_rating || 1)} text-white px-3 py-1 rounded`}>
+                          {review.difficulty_rating || 1}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Weekly Workload</span>
+                        <span className={`${getWorkloadColor(12)} text-white px-3 py-1 rounded`}>
+                          12 hrs
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Difficulty</span>
-                      <span className="bg-red-600 text-white px-3 py-1 rounded">5.0</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Weekly Workload</span>
-                      <span className="bg-yellow-400 text-white px-3 py-1 rounded">12 hrs</span>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             ))}
