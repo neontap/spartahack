@@ -1,4 +1,5 @@
 "use client";
+import React from 'react'
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { createBrowserClient } from '@supabase/ssr'
@@ -18,6 +19,7 @@ import {
 type Course = {
   id: number;
   course_code: string;
+  subject_code: string;
   title: string;
   description?: string;
   historical_average_grade: number | null;
@@ -45,7 +47,7 @@ export default function CourseDetailPage() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
-  
+
   const params = useParams();
   const courseId = typeof params.courseId === "string" ? parseInt(params.courseId) : null;
 
@@ -86,6 +88,7 @@ export default function CourseDetailPage() {
         .select(`
           id,
           course_code,
+          subject_code,
           title,
           description,
           historical_average_grade,
@@ -194,97 +197,98 @@ export default function CourseDetailPage() {
   const universityName = course.universities?.[0]?.name || "Unknown University";
 
   return (
-    <main className="container mx-auto py-6 space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {course.course_code} - {course.title}
-          </CardTitle>
-          <CardDescription>
-            {course.description || "No description available."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <p><strong>Instructor:</strong> {instructor}</p>
-            <p><strong>University:</strong> {universityName}</p>
-            <p>
-              <strong>Average Grade:</strong>{" "}
-              {course.historical_average_grade !== null
-                ? course.historical_average_grade.toFixed(1)
-                : "N/A"}
-            </p>
+    <main className="mx-auto w-full">
+
+      <div className="bg-md-purple w-full border-t-2 border-purple-600/20 py-8 rounded-b-2xl shadow-md">
+
+        <div className="px-4 flex justify-between items-start">
+          {/* Left side - University Info */}
+          <div className="flex-1">
+            <h1 className="text-5xl font-extrabold text-rbc-purple">{course.subject_code} {course.course_code} </h1>
+            <p className="text-lg text-white font-semibold py-2">{course.title}</p>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Submit Your Review</CardTitle>
-          {!user && (
-            <CardDescription className="text-red-500">
-              Please sign in to submit a review
-            </CardDescription>
-          )}
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          {success && (
-            <Alert className="mb-4">
-              <AlertDescription>{success}</AlertDescription>
-            </Alert>
-          )}
-          <form onSubmit={handleSubmitReview} className="space-y-4">
-            <div>
-              <label className="block mb-1">Rating (0-5):</label>
-              <Input
-                type="number"
-                min="0"
-                max="5"
-                step="0.5"
-                value={newRating}
-                onChange={(e) => {
-                  setError(null);
-                  setNewRating(e.target.value);
-                }}
-                className="w-full"
-                required
-              />
+          {/* Right side - Statistics */}
+          <div className="flex-1">
+            {/* Student Count & Acceptance Rate */}
+            <div className="flex justify-left gap-4 mb-2">
+              <div className="text-left">
+                <div className="text-4xl text-white font-bold">Average Grade</div>
+                <div className="text-3xl font-extrabold text-rbc-purple p-4 rounded-2xl w-16h-16 text-center bg-white/20">3.3</div>
+              </div>
             </div>
-            <div>
-              <label className="block mb-1">Comment:</label>
-              <Textarea
-                value={newComment}
-                onChange={(e) => {
-                  setError(null);
-                  setNewComment(e.target.value);
-                }}
-                className="w-full"
-                rows={4}
-                placeholder="Write your review here..."
-                required
-              />
-            </div>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Submit Review"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
 
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Reviews</h2>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-8 bg-slight-purple">
+
+        <h1 className="text-4xl font-bold py-8 text-rbc-purple">Reviews</h1>
+        <Card>
+          <CardHeader>
+            <CardTitle>Submit Your Review</CardTitle>
+            {!user && (
+              <CardDescription className="text-red-500">
+                Please sign in to submit a review
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            {success && (
+              <Alert className="mb-4">
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
+            <form onSubmit={handleSubmitReview} className="space-y-4">
+              <div>
+                <label className="block mb-1">Rating (0-5):</label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="5"
+                  step="0.5"
+                  value={newRating}
+                  onChange={(e) => {
+                    setError(null);
+                    setNewRating(e.target.value);
+                  }}
+                  className="w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1">Comment:</label>
+                <Textarea
+                  value={newComment}
+                  onChange={(e) => {
+                    setError(null);
+                    setNewComment(e.target.value);
+                  }}
+                  className="w-full"
+                  rows={4}
+                  placeholder="Write your review here..."
+                  required
+                />
+              </div>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : "Submit Review"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
         {reviews.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-4 pb-24 mt-8">
             {reviews.map((review) => (
-              <Card key={review.id}>
+              <Card className="bg-white rounded-3xl px-4 mx-4 my-2 shadow-md border-none" key={review.id}>
                 <CardHeader>
                   <div className="flex justify-between items-center">
-                    <CardTitle>Rating: {review.rating.toFixed(1)}</CardTitle>
+                  {/*<CardTitle>Rating: {review.rating.toFixed(1)}</CardTitle> */}
+                  <CardTitle className="text-2xl">Professor <span className="text-glow-purple">{instructor} </span> <span className="text-sm font-semibold mx-2 text-rpc-purple">FALL 2024</span></CardTitle>
                     <CardDescription>
                       {new Date(review.created_at).toLocaleDateString()}
                     </CardDescription>
@@ -299,6 +303,10 @@ export default function CourseDetailPage() {
         ) : (
           <p>No reviews yet. Be the first to review!</p>
         )}
+
+      </div>
+      <div className="py-8">
+        <h2 className="text-2xl font-bold mb-4">Reviews</h2>
       </div>
     </main>
   );
