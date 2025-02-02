@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import CourseAssistant from '@/components/CourseAssistant';
+import {ThumbsUp, ThumbsDown} from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -411,9 +412,9 @@ export default function CourseDetailPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-green-500">3</span>
-                      <span className="text-gray-500">👍</span>
+                      <span className="text-gray-500"><ThumbsUp className="relative -top-1"/></span>
                       <span className="text-red-500">0</span>
-                      <span className="text-gray-500">👎</span>
+                      <span className="text-gray-500"><ThumbsDown className="relative -top-0" /></span>
                     </div>
                   </div>
 
