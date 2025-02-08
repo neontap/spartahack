@@ -11,10 +11,12 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
+// import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { createBrowserClient } from "@supabase/ssr";
+
+import { Slider } from '@mui/material';
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,9 +28,9 @@ const CourseReviewForm = () => {
   const [formData, setFormData] = useState({
     professor: "",
     semester: "",
-    courseRating: [3],
-    difficulty: [3],
-    hoursPerWeek: [6],
+    courseRating: 3,
+    difficulty: 3,
+    hoursPerWeek: 6,
     grade: null,
     format: "",
     attendance: "",
@@ -94,8 +96,8 @@ const CourseReviewForm = () => {
     const { error } = await supabase.from("course_reviews").insert({
       course_id: courseId,
       user_id: user.id,
-      rating: formData.courseRating[0],
-      difficulty_rating: formData.difficulty[0],
+      rating: formData.courseRating,
+      difficulty_rating: formData.difficulty,
       comment: formData.review,
       advice: formData.advice,
       mandatory_attendance: formData.attendance === "yes",
@@ -114,9 +116,9 @@ const CourseReviewForm = () => {
       setFormData({
         professor: "",
         semester: "",
-        courseRating: [3],
-        difficulty: [3],
-        hoursPerWeek: [6],
+        courseRating: 3,
+        difficulty: 3,
+        hoursPerWeek: 6,
         grade: null,
         format: "",
         attendance: "",
@@ -199,55 +201,184 @@ const CourseReviewForm = () => {
               <div className="space-y-2">
                 <Label>Rate the course</Label>
                 <Slider
-                  value={formData.courseRating}
-                  max={5}
-                  step={0.5}
-                  className="w-full"
-                  onValueChange={(value) => setFormData({ ...formData, courseRating: value })}
+                    // Ensure value is never undefined with default value
+                    value={formData.courseRating ?? 1}
+                    onChange={(_, value) => setFormData({ ...formData, courseRating: value as number })}
+                    min={1}
+                    max={5}
+                    step={1}
+                    marks={[
+                      { value: 1, label: '1' },
+                      { value: 2, label: '2' },
+                      { value: 3, label: '3' },
+                      { value: 4, label: '4' },
+                      { value: 5, label: '5' }
+                    ]}
+                    sx={{
+                      '& .MuiSlider-track': {
+                        backgroundColor: '#4F3078',
+                        color: '#4F3078'
+                      },
+                      '& .MuiSlider-rail': {
+                        backgroundColor: '#e2e8f0',
+                      },
+                      '& .MuiSlider-thumb': {
+                        backgroundColor: '#fff',
+                        border: '2px solid #4F3078',
+                        '&:hover': {
+                          boxShadow: 'none',
+                        },
+                        '&:focus, &.Mui-focusVisible': {
+                          boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
+                          outline: 'none'
+                        },
+                        '&.Mui-active': {
+                          boxShadow: '0 0 0 14px rgba(79, 48, 120, 0.16)'
+                        }
+                      },
+                      '& .MuiSlider-mark': {
+                        backgroundColor: '#4F3078',
+                        height: '8px',
+                        width: '2px',
+                        '&.MuiSlider-markActive': {
+                          backgroundColor: '#4F3078',
+                        }
+                      },
+                      '& .MuiSlider-markLabel': {
+                        color: '#666',
+                        fontSize: '0.875rem'
+                      },
+                      '& .MuiSlider-valueLabel': {
+                        backgroundColor: '#4F3078',
+                      },
+                      // Override focus states
+                      '&.Mui-focused .MuiSlider-thumb': {
+                        boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
+                      }
+                    }}
                 />
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>1</span>
-                  <span>2</span>
-                  <span>3</span>
-                  <span>4</span>
-                  <span>5</span>
-                </div>
               </div>
 
               <div className="space-y-2">
                 <Label>How difficult was the course?</Label>
                 <Slider
-                  value={formData.difficulty}
-                  max={5}
-                  step={0.5}
-                  className="w-full"
-                  onValueChange={(value) => setFormData({ ...formData, difficulty: value })}
+                    // Ensure value is never undefined with default value
+                    value={formData.difficulty ?? 1}
+                    onChange={(_, value) => setFormData({ ...formData, difficulty: value as number })}
+                    min={1}
+                    max={5}
+                    step={1}
+                    marks={[
+                      { value: 1, label: '1' },
+                      { value: 2, label: '2' },
+                      { value: 3, label: '3' },
+                      { value: 4, label: '4' },
+                      { value: 5, label: '5' }
+                    ]}
+                    sx={{
+                      '& .MuiSlider-track': {
+                        backgroundColor: '#4F3078',
+                        color: '#4F3078'
+                      },
+                      '& .MuiSlider-rail': {
+                        backgroundColor: '#e2e8f0',
+                      },
+                      '& .MuiSlider-thumb': {
+                        backgroundColor: '#fff',
+                        border: '2px solid #4F3078',
+                        '&:hover': {
+                          boxShadow: 'none',
+                        },
+                        '&:focus, &.Mui-focusVisible': {
+                          boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
+                          outline: 'none'
+                        },
+                        '&.Mui-active': {
+                          boxShadow: '0 0 0 14px rgba(79, 48, 120, 0.16)'
+                        }
+                      },
+                      '& .MuiSlider-mark': {
+                        backgroundColor: '#4F3078',
+                        height: '8px',
+                        width: '2px',
+                        '&.MuiSlider-markActive': {
+                          backgroundColor: '#4F3078',
+                        }
+                      },
+                      '& .MuiSlider-markLabel': {
+                        color: '#666',
+                        fontSize: '0.875rem'
+                      },
+                      '& .MuiSlider-valueLabel': {
+                        backgroundColor: '#4F3078',
+                      },
+                      // Override focus states
+                      '&.Mui-focused .MuiSlider-thumb': {
+                        boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
+                      }
+                    }}
                 />
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>1</span>
-                  <span>2</span>
-                  <span>3</span>
-                  <span>4</span>
-                  <span>5</span>
-                </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Hours spent on work outside of class</Label>
                 <Slider
-                  value={formData.hoursPerWeek}
-                  max={15}
-                  step={1}
-                  className="w-full"
-                  onValueChange={(value) => setFormData({ ...formData, hoursPerWeek: value })}
+                    // Ensure value is never undefined with default value
+                    value={formData.hoursPerWeek ?? 0}
+                    onChange={(_, value) => setFormData({ ...formData, hoursPerWeek: value as number })}
+                    min={4}
+                    max={20}
+                    step={4}
+                    marks={[
+                      { value: 4, label: '0-4' },
+                      { value: 8, label: '4-8' },
+                      { value: 12, label: '8-12' },
+                      { value: 16, label: '12-16' },
+                      { value: 20, label: '16-20' }
+                    ]}
+                    sx={{
+                      '& .MuiSlider-track': {
+                        backgroundColor: '#4F3078',
+                        color: '#4F3078'
+                      },
+                      '& .MuiSlider-rail': {
+                        backgroundColor: '#e2e8f0',
+                      },
+                      '& .MuiSlider-thumb': {
+                        backgroundColor: '#fff',
+                        border: '2px solid #4F3078',
+                        '&:hover': {
+                          boxShadow: 'none',
+                        },
+                        '&:focus, &.Mui-focusVisible': {
+                          boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
+                          outline: 'none'
+                        },
+                        '&.Mui-active': {
+                          boxShadow: '0 0 0 14px rgba(79, 48, 120, 0.16)'
+                        }
+                      },
+                      '& .MuiSlider-mark': {
+                        backgroundColor: '#4F3078',
+                        height: '8px',
+                        width: '2px',
+                        '&.MuiSlider-markActive': {
+                          backgroundColor: '#4F3078',
+                        }
+                      },
+                      '& .MuiSlider-markLabel': {
+                        color: '#666',
+                        fontSize: '0.875rem'
+                      },
+                      '& .MuiSlider-valueLabel': {
+                        backgroundColor: '#4F3078',
+                      },
+                      // Override focus states
+                      '&.Mui-focused .MuiSlider-thumb': {
+                        boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
+                      }
+                    }}
                 />
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>0-4</span>
-                  <span>4-8</span>
-                  <span>8-12</span>
-                  <span>12-16</span>
-                  <span>16-20</span>
-                </div>
               </div>
             </div>
           </div>
