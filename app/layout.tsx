@@ -4,6 +4,7 @@ import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import Image from 'next/image';
 import { Gantari, Roboto } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import {LoadingProvider} from "@/components/LoadingProvider";
 import Link from "next/link";
 import "./globals.css";
 
@@ -43,6 +44,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <LoadingProvider>
           <main className="min-h-screen flex flex-col items-center">
             <div className="flex-1 w-full flex flex-col items-center">
               <nav className="w-full z-50 bg-md-purple flex justify-center border-b border-b-foreground/10 h-16">
@@ -71,6 +73,7 @@ export default function RootLayout({
               </footer>
             </div>
           </main>
+          </LoadingProvider>
         </ThemeProvider>
       </body>
     </html>
