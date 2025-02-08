@@ -57,6 +57,7 @@ export default function RootLayout({
                           width={66}
                           height={52}
                           alt="Course Checker logo"
+                          priority={true}
                       />
                     </Link>
                   </div>
