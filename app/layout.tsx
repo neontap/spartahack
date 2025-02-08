@@ -52,12 +52,11 @@ export default function RootLayout({
                   <div className="flex gap-5 items-center font-semibold">
                     <Link href="/">
                       <Image
-                          src="coursecheckminilogo.svg"
+                          src="/coursecheckminilogo.svg"
                           className=""
                           width={66}
                           height={52}
                           alt="Course Checker logo"
-                          priority={true}
                       />
                     </Link>
                   </div>
