@@ -33,6 +33,9 @@ const config = {
           // light: '#6B4A94',    // Lighter shade
           // dark: '#3D2559',     // Darker shade
         },
+        'drk-purple': {
+          DEFAULT: '#5f477d'
+        },
         'md-purple': {
           DEFAULT: '#B9A5E4'
         },

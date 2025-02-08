@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import UniversityLogo from "@/components/university-logo"
 import { createClient } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -129,7 +130,7 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
     if (!initialLoading) {
       setLoading(true);
     }
-    
+
     try {
       const fromIndex = (currentPage - 1) * pageSize;
       const toIndex = currentPage * pageSize - 1;
@@ -208,7 +209,7 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
   useEffect(() => {
     setPage(1);
     debouncedFetchCourses(1, subjectCode, courseCode, courseName);
-    
+
     return () => {
       debouncedFetchCourses.cancel();
     };
@@ -242,53 +243,15 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
 
   return (
     <main className="w-full">
-      {/* University Header Section */}
-      <div className="bg-md-purple w-full border-t-2 border-purple-600/20 py-8 rounded-b-2xl shadow-md">
-        <div className="px-4 flex justify-between items-start">
-          <div className="flex-1">
-            <h1 className="text-7xl font-roboto font-extrabold">{university?.name}</h1>
-            <p className="text-lg py-2">East Lansing, MI</p>
-            <p className="text-lg font-light py-2 underline">https://msu.edu</p>
-          </div>
-          <div className="flex-1">
-            <div className="flex justify-left gap-4 mb-2">
-              <div className="text-left">
-                <div className="text-4xl text-white font-bold">51,316</div>
-                <div className="text-xl font-bold">students</div>
-              </div>
-            </div>
-            <div className="flex justify-left gap-4 mb-2">
-              <div className="text-right">
-                <div className="text-4xl text-white text-left font-bold">88%</div>
-                <div className="text-xl font-bold">acceptance rate</div>
-              </div>
-            </div>
-            <div className="flex justify-left gap-4 mb-2">
-              <div className="text-left">
-                <div className="text-4xl text-white text-left font-bold">$16,118</div>
-                <div className="text-xl font-bold">in-state</div>
-              </div>
-              <div className="text-left ml-20">
-                <span className="font-bold text-4xl text-white">$43,502</span>
-                <div className="text-xl font-bold">out-of-state</div>
-              </div>
-            </div>
-            <div className="flex justify-left gap-4">
-              <div className="text-left">
-                <div className="text-4xl font-bold text-white">#30</div>
-                <div className="text-xl font-bold">in the U.S. for public schools</div>
-              </div>
-              <div className="text-left">
-                <div className="text-4xl font-bold text-white">#63</div>
-                <div className="text-xl font-bold">in the U.S. nationally</div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Logo section */}
+      <div className="w-full mr-4">
+        <UniversityLogo
+          universityName="Michigan State University"
+          universityLocation="East Lansing, MI"
+        />
       </div>
-
       {/* Search Section */}
-      <div className="flex justify-center mt-8 bg-slight-purple">
+      <div className="flex justify-center mt-4 bg-slight-purple">
         <div className="space-y-4 rounded-xl px-8 max-w-3xl w-full">
           <h1 className="text-3xl font-bold text-center">Search Your Course</h1>
           <div className="flex gap-4 items-center justify-center">
