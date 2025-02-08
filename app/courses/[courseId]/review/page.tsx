@@ -1,6 +1,6 @@
-"use client";
-import { useParams } from "next/navigation";
+"use client"
 import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -17,11 +17,12 @@ import { Label } from "@/components/ui/label";
 import { createBrowserClient } from "@supabase/ssr";
 
 const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 const CourseReviewForm = () => {
+  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     professor: "",
     semester: "",
@@ -42,15 +43,14 @@ const CourseReviewForm = () => {
   const [course, setCourse] = useState(null);
 
   const params = useParams();
-  const courseId =
-      typeof params.courseId === "string" ? parseInt(params.courseId) : null;
+  const courseId = typeof params.courseId === "string" ? parseInt(params.courseId) : null;
 
   useEffect(() => {
     if (!courseId) return;
     const fetchCourseDetails = async () => {
       const { data, error } = await supabase
-          .from("courses")
-          .select(`
+        .from("courses")
+        .select(`
           id,
           title,
           course_professors (
@@ -60,8 +60,8 @@ const CourseReviewForm = () => {
             )
           )
         `)
-          .eq("id", courseId)
-          .single();
+        .eq("id", courseId)
+        .single();
       if (error) {
         console.error("Error fetching course details:", error);
       } else {
@@ -102,15 +102,15 @@ const CourseReviewForm = () => {
       recommend_class: formData.recommend === "yes",
       textbook_required: formData.textbook === "yes",
       class_format: formData.format,
-      grade: formData.grade // Already an integer from select
+      grade: formData.grade
     });
 
     if (error) {
       console.error("Error submitting review:", error);
       setSubmissionError("Failed to submit review. Please try again.");
     } else {
-      console.log("Review submitted successfully");
       setSubmissionSuccess("Review submitted successfully!");
+      setCurrentStep(1);
       setFormData({
         professor: "",
         semester: "",
@@ -128,52 +128,45 @@ const CourseReviewForm = () => {
     }
   };
 
-  return (
-      <>
-        <div className="bg-md-purple w-full border-t-2 border-purple-600/20 py-8 rounded-b-2xl shadow-md">
-          <div className="px-4 flex justify-between items-start">
-            <div className="flex-1">
-              <h1 className="text-5xl font-extrabold text-rbc-purple">
-                {course ? course.title : "Loading Course..."}
-              </h1>
-              <p className="text-lg text-white font-semibold py-2">
-                Write a Review
-              </p>
-            </div>
-          </div>
-        </div>
-        <Card className="w-full my-4 max-w-2xl mx-auto p-6 bg-white/50 backdrop-blur">
-          <CardContent>
-            {submissionError && (
-                <p className="text-red-600">{submissionError}</p>
-            )}
-            {submissionSuccess && (
-                <p className="text-green-600">{submissionSuccess}</p>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-8">
+  const canProceedToNextStep = () => {
+    switch (currentStep) {
+      case 1:
+        return formData.professor && formData.semester;
+      case 2:
+        return formData.courseRating && formData.difficulty && formData.hoursPerWeek;
+      case 3:
+        return formData.grade !== null && formData.format && formData.attendance;
+      case 4:
+        return formData.recommend && formData.textbook;
+      case 5:
+        return formData.review.length >= 10 && formData.advice.length >= 10;
+      default:
+        return false;
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-purple-800">Basic Information</h2>
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Select your professor</Label>
                 <Select
-                    value={formData.professor}
-                    onValueChange={(value) =>
-                        setFormData({ ...formData, professor: value })
-                    }
+                  value={formData.professor}
+                  onValueChange={(value) => setFormData({ ...formData, professor: value })}
                 >
                   <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="Select your Professor" />
                   </SelectTrigger>
                   <SelectContent>
-                    {course?.course_professors?.map((cp, index) => {
-                      const prof = cp.professors;
-                      return (
-                          <SelectItem
-                              key={prof.id || index}
-                              value={prof.full_name}
-                          >
-                            {prof.full_name}
-                          </SelectItem>
-                      );
-                    })}
+                    {course?.course_professors?.map((cp, index) => (
+                      <SelectItem key={cp.professors.id || index} value={cp.professors.full_name}>
+                        {cp.professors.full_name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -181,9 +174,8 @@ const CourseReviewForm = () => {
               <div className="space-y-2">
                 <Label>Select your semester</Label>
                 <Select
-                    onValueChange={(value) =>
-                        setFormData({ ...formData, semester: value })
-                    }
+                  value={formData.semester}
+                  onValueChange={(value) => setFormData({ ...formData, semester: value })}
                 >
                   <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="Select your semester" />
@@ -195,17 +187,23 @@ const CourseReviewForm = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+          </div>
+        );
 
+      case 2:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-purple-800">Course Experience</h2>
+            <div className="space-y-6">
               <div className="space-y-2">
                 <Label>Rate the course</Label>
                 <Slider
-                    defaultValue={[3]}
-                    max={5}
-                    step={0.5}
-                    className="w-full"
-                    onValueChange={(value) =>
-                        setFormData({ ...formData, courseRating: value })
-                    }
+                  value={formData.courseRating}
+                  max={5}
+                  step={0.5}
+                  className="w-full"
+                  onValueChange={(value) => setFormData({ ...formData, courseRating: value })}
                 />
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>1</span>
@@ -219,13 +217,11 @@ const CourseReviewForm = () => {
               <div className="space-y-2">
                 <Label>How difficult was the course?</Label>
                 <Slider
-                    defaultValue={[3]}
-                    max={5}
-                    step={0.5}
-                    className="w-full"
-                    onValueChange={(value) =>
-                        setFormData({ ...formData, difficulty: value })
-                    }
+                  value={formData.difficulty}
+                  max={5}
+                  step={0.5}
+                  className="w-full"
+                  onValueChange={(value) => setFormData({ ...formData, difficulty: value })}
                 />
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>1</span>
@@ -237,17 +233,13 @@ const CourseReviewForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>
-                  How many hours do you spend on work outside of class?
-                </Label>
+                <Label>Hours spent on work outside of class</Label>
                 <Slider
-                    defaultValue={[6]}
-                    max={15}
-                    step={1}
-                    className="w-full"
-                    onValueChange={(value) =>
-                        setFormData({ ...formData, hoursPerWeek: value })
-                    }
+                  value={formData.hoursPerWeek}
+                  max={15}
+                  step={1}
+                  className="w-full"
+                  onValueChange={(value) => setFormData({ ...formData, hoursPerWeek: value })}
                 />
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>0-4</span>
@@ -257,27 +249,30 @@ const CourseReviewForm = () => {
                   <span>16-20</span>
                 </div>
               </div>
+            </div>
+          </div>
+        );
 
+      case 3:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-purple-800">Course Details</h2>
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Select the grade you received in the class</Label>
+                <Label>Select the grade you received</Label>
                 <Select
-                    onValueChange={(value) =>
-                        setFormData({ ...formData, grade: parseInt(value) })
-                    }
+                  value={formData.grade?.toString()}
+                  onValueChange={(value) => setFormData({ ...formData, grade: parseInt(value) })}
                 >
                   <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="Select your grade" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="4">4.0</SelectItem>
-                    <SelectItem value="3.5">3.5</SelectItem>
-                    <SelectItem value="3">3.0</SelectItem>
-                    <SelectItem value="2.5">2.5</SelectItem>
-                    <SelectItem value="2">2.0</SelectItem>
-                    <SelectItem value="1.5">1.5</SelectItem>
-                    <SelectItem value="1.0">1.0</SelectItem>
-                    <SelectItem value="0.5">0.5</SelectItem>
-                    <SelectItem value="0.0">0.0</SelectItem>
+                    {[4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5, 0].map((grade) => (
+                      <SelectItem key={grade} value={grade.toString()}>
+                        {grade.toFixed(1)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -285,9 +280,8 @@ const CourseReviewForm = () => {
               <div className="space-y-2">
                 <Label>What format did your class have?</Label>
                 <Select
-                    onValueChange={(value) =>
-                        setFormData({ ...formData, format: value })
-                    }
+                  value={formData.format}
+                  onValueChange={(value) => setFormData({ ...formData, format: value })}
                 >
                   <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="Select class format" />
@@ -303,10 +297,9 @@ const CourseReviewForm = () => {
               <div className="space-y-2">
                 <Label>Was attendance mandatory?</Label>
                 <RadioGroup
-                    className="flex gap-4"
-                    onValueChange={(value) =>
-                        setFormData({ ...formData, attendance: value })
-                    }
+                  value={formData.attendance}
+                  className="flex gap-4"
+                  onValueChange={(value) => setFormData({ ...formData, attendance: value })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="yes" id="yes-attendance" />
@@ -318,14 +311,21 @@ const CourseReviewForm = () => {
                   </div>
                 </RadioGroup>
               </div>
+            </div>
+          </div>
+        );
 
+      case 4:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-purple-800">Quick Recommendations</h2>
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Would you recommend this class?</Label>
                 <RadioGroup
-                    className="flex gap-4"
-                    onValueChange={(value) =>
-                        setFormData({ ...formData, recommend: value })
-                    }
+                  value={formData.recommend}
+                  className="flex gap-4"
+                  onValueChange={(value) => setFormData({ ...formData, recommend: value })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="yes" id="yes-recommend" />
@@ -341,10 +341,9 @@ const CourseReviewForm = () => {
               <div className="space-y-2">
                 <Label>Was there a textbook requirement?</Label>
                 <RadioGroup
-                    className="flex gap-4"
-                    onValueChange={(value) =>
-                        setFormData({ ...formData, textbook: value })
-                    }
+                  value={formData.textbook}
+                  className="flex gap-4"
+                  onValueChange={(value) => setFormData({ ...formData, textbook: value })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="yes" id="yes-textbook" />
@@ -356,41 +355,121 @@ const CourseReviewForm = () => {
                   </div>
                 </RadioGroup>
               </div>
+            </div>
+          </div>
+        );
 
+      case 5:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-purple-800">Detailed Feedback</h2>
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Write a review</Label>
                 <Textarea
-                    placeholder="Share your thoughts about the course"
-                    className="min-h-32 bg-white"
-                    onChange={(e) =>
-                        setFormData({ ...formData, review: e.target.value })
-                    }
-                    value={formData.review}
+                  placeholder="Share your thoughts about the course (minimum 10 characters)"
+                  className="min-h-32 bg-white"
+                  value={formData.review}
+                  onChange={(e) => setFormData({ ...formData, review: e.target.value })}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label>Share some advice</Label>
                 <Textarea
-                    placeholder="What advice can you give to future students of this course?"
-                    className="min-h-24 bg-white"
-                    onChange={(e) =>
-                        setFormData({ ...formData, advice: e.target.value })
-                    }
-                    value={formData.advice}
+                  placeholder="What advice can you give to future students? (minimum 10 characters)"
+                  className="min-h-24 bg-white"
+                  value={formData.advice}
+                  onChange={(e) => setFormData({ ...formData, advice: e.target.value })}
                 />
               </div>
+            </div>
+          </div>
+        );
 
-              <Button
-                  type="submit"
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                Submit Review
-              </Button>
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <>
+      <div className="bg-md-purple w-full border-t-2 border-purple-600/20 py-8 rounded-b-2xl shadow-md">
+        <div className="px-4 flex justify-between items-start">
+          <div className="flex-1">
+            <h1 className="text-5xl font-extrabold text-rbc-purple">
+              {course ? course.title : "Loading Course..."}
+            </h1>
+            <p className="text-lg text-white font-semibold py-2">Write a Review</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="w-full max-w-2xl mx-auto p-4">
+        {/* Progress Indicator */}
+        <div className="mb-6">
+          <div className="flex justify-between mb-2">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div
+                key={step}
+                className={`w-1/5 h-2 rounded-full mx-1 ${
+                  step <= currentStep ? 'bg-purple-600' : 'bg-gray-200'
+                }`}
+              />
+            ))}
+          </div>
+          <div className="text-center text-sm text-gray-600">
+            Step {currentStep} of 5
+          </div>
+        </div>
+
+        <Card className="bg-white/50 backdrop-blur">
+          <CardContent className="p-6">
+            {submissionError && (
+              <p className="text-red-600 mb-4">{submissionError}</p>
+            )}
+            {submissionSuccess && (
+              <p className="text-green-600 mb-4">{submissionSuccess}</p>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {renderStepContent()}
+
+              <div className="flex justify-between pt-4">
+                {currentStep > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCurrentStep(currentStep - 1)}
+                    className="bg-white hover:bg-gray-50"
+                  >
+                    Previous
+                  </Button>
+                )}
+                {currentStep < 5 ? (
+                  <Button
+                    type="button"
+                    onClick={() => setCurrentStep(currentStep + 1)}
+                    disabled={!canProceedToNextStep()}
+                    className="bg-purple-600 hover:bg-purple-700 text-white ml-auto"
+                  >
+                    Next
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={!canProceedToNextStep()}
+                    className="bg-purple-600 hover:bg-purple-700 text-white ml-auto"
+                  >
+                    Submit Review
+                  </Button>
+                )}
+              </div>
             </form>
           </CardContent>
         </Card>
-      </>
+      </div>
+    </>
   );
 };
 
