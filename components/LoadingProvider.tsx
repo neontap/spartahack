@@ -1,6 +1,6 @@
 // app/providers.tsx
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {usePathname, useSearchParams} from "next/navigation";
 
 const AnimatedLoader = () => {
@@ -85,9 +85,9 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
     }, [pathname, searchParams]); // This will trigger when the route changes
 
     return (
-        <>
+        <Suspense>
             <LoadingScreen isLoading={isLoading} />
             {children}
-        </>
+        </Suspense>
     );
 }
