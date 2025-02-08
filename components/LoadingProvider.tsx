@@ -85,9 +85,11 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
     }, [pathname, searchParams]); // This will trigger when the route changes
 
     return (
-        <Suspense>
+        <>
             <LoadingScreen isLoading={isLoading} />
-            {children}
-        </Suspense>
+            <Suspense>
+                {children}
+            </Suspense>
+        </>
     );
 }
