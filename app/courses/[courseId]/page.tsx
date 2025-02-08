@@ -245,6 +245,7 @@ export default function CourseDetailPage() {
     <main className="mx-auto w-full">
       <div className="bg-md-purple w-full border-t-2 border-purple-600/20 py-8 rounded-b-2xl shadow-md">
         <div className="px-4 flex justify-between items-start">
+
           {/* Left side - University Info */}
           <div className="flex-1">
             <h1 className="text-5xl font-extrabold text-rbc-purple">{course.subject_code} {course.course_code} </h1>
