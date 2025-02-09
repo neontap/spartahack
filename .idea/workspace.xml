@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="fc0e8467-4ea9-4bc7-8913-26c3bd531485" name="Changes" comment="conflict resolution, main merge">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/LoadingProvider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/LoadingProvider.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
