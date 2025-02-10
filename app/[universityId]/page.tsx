@@ -46,11 +46,11 @@ type Course = {
   review_count: number;
   universities: {
     name: string;
-  };
+  }[];
   course_professors: {
     professors: {
-      full_name: string;
-    };
+      full_name?: any;
+    }[];
   }[];
   reviews: {
     rating: number;
@@ -93,7 +93,7 @@ function CourseCardSkeleton() {
 
 function CourseCard({ course }: { course: Course }) {
   const instructor =
-    course.course_professors?.[0]?.professors?.full_name || "Unknown Instructor";
+    course.course_professors?.[0]?.professors[0]?.full_name || "Unknown Instructor";
 
   const getQualityColor = (rating: number | null) => {
     if (!rating) return 'text-gray-400';
