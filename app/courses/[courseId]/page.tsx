@@ -43,7 +43,7 @@ type Course = {
     professors: {
       full_name: string;
       id: number;
-    };
+    }[];
   }[];
 };
 // Helper functions for styling
@@ -224,11 +224,15 @@ function CourseDetailPage() {
                     <SelectValue placeholder="Select Professor" />
                   </SelectTrigger>
                   <SelectContent>
-                    {course.course_professors?.map((cp) => (
-                      <SelectItem key={cp.professors.id} value={cp.professors.full_name}>
-                        {cp.professors.full_name}
-                      </SelectItem>
-                    ))}
+                    {course.course_professors?.flatMap((cp) => {
+                      // Check if cp.professors is an array. If not, wrap it in an array.
+                      const profArray = Array.isArray(cp.professors) ? cp.professors : cp.professors ? [cp.professors] : [];
+                      return profArray.map((prof) => (
+                        <SelectItem key={prof.id} value={prof.full_name}>
+                          {prof.full_name}
+                        </SelectItem>
+                      ));
+                    })}
                   </SelectContent>
                 </Select>
 
@@ -401,7 +405,7 @@ function ReviewCard({ review, professors }) {
             {review.attendance_mandatory ? "Attendance Required" : "Attendance Optional"}
           </Badge>
           <Badge variant="outline">{review.class_format || "Format Not Specified"}</Badge>
-          <Badge variant={review.would_recommend ? "success" : "destructive"}>
+          <Badge variant={review.would_recommend ? "default" : "destructive"}>
             {review.would_recommend ? "Would Take Again" : "Would Not Take Again"}
           </Badge>
         </div>
