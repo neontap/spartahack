@@ -1,16 +1,8 @@
-"use client";
-
-import Link from "next/link";
-import React from 'react'
-import { useEffect, useState } from "react";
+"use client"
+import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { createBrowserClient } from '@supabase/ssr'
-import { Input } from "@/components/ui/input";
+import { createBrowserClient } from '@supabase/ssr';
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import CourseAssistant from '@/components/CourseAssistant';
-import {ThumbsUp, ThumbsDown} from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -18,15 +10,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+import Link from "next/link";
 import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { ThumbsUp, ThumbsDown, Book, Users, Clock, Calendar, Star, AlertTriangle, MessageCircle } from 'lucide-react';
+import CourseAssistant from '@/components/CourseAssistant';
 
-// Type definitions remain the same
+// Types remain similar but with added fields
 type Course = {
   id: number;
   course_code: string;
@@ -40,8 +42,23 @@ type Course = {
   course_professors: {
     professors: {
       full_name: string;
+      id: number;
     };
   }[];
+};
+// Helper functions for styling
+const getQualityColor = (rating: number) => {
+  if (rating >= 4) return 'bg-green-600 text-white';
+  if (rating >= 3) return 'bg-yellow-400 text-white';
+  return 'bg-red-600 text-white';
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
 };
 
 type Review = {
@@ -49,11 +66,20 @@ type Review = {
   course_id: number;
   rating: number;
   difficulty_rating: number;
+  workload_hours: number;
+  grade_received: string;
+  attendance_mandatory: boolean;
+  textbook_required: boolean;
+  class_format: string;
+  would_recommend: boolean;
   comment: string;
   created_at: string;
+  helpful_count: number;
+  unhelpful_count: number;
+  professor_id: number;
+  semester: string;
 };
 
-// Add semester options
 const SEMESTERS = [
   "Fall 2024",
   "Summer 2024",
@@ -62,230 +88,157 @@ const SEMESTERS = [
   "Summer 2023",
   "Spring 2023"
 ];
-export default function CourseDetailPage() {
-  // Initialize Supabase client with the new approach
+
+function CourseDetailPage() {
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  );
 
- // Helper function to determine quality rating color
-  const getQualityColor = (rating:number) => {
-    if (rating >= 4) return 'bg-green-600';
-    if (rating >= 3) return 'bg-yellow-400';
-    return 'bg-red-600';
-  };
-
-  // Helper function to determine difficulty rating color
-  const getDifficultyColor = (rating:number) => {
-    if (rating >= 4) return 'bg-red-600';
-    if (rating >= 2.5) return 'bg-yellow-400';
-    return 'bg-green-600';
-  };
-
-  // Helper function to determine workload color
-  const getWorkloadColor = (hours:number) => {
-    if (hours >= 15) return 'bg-red-600';
-    if (hours >= 10) return 'bg-yellow-400';
-    return 'bg-green-600';
-  };
   const params = useParams();
   const courseId = typeof params.courseId === "string" ? parseInt(params.courseId) : null;
 
-  const [selectedProfessor, setSelectedProfessor] = useState<string>("");
-
-  const [selectedSemester, setSelectedSemester] = useState<string>("Fall 2024");
   const [course, setCourse] = useState<Course | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedProfessor, setSelectedProfessor] = useState<string>("");
+  const [selectedSemester, setSelectedSemester] = useState<string>("Fall 2024");
+  const [activeTab, setActiveTab] = useState("reviews");
+  const [statistics, setStatistics] = useState({
+    averageRating: 0,
+    averageDifficulty: 0,
+    averageWorkload: 0,
+    recommendationRate: 0,
+    totalReviews: 0
+  });
 
-  const [newRating, setNewRating] = useState<string>("0");
-  const [newComment, setNewComment] = useState<string>("");
 
-  // Set up auth listener with the new approach
+  // Fetch course and review data
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-    });
+    const fetchData = async () => {
+      if (!courseId) return;
 
-    // Get initial auth state
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchCourseDetails = async () => {
-    if (!courseId) return;
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("courses")
-        .select(`
-          id,
-          course_code,
-          subject_code,
-          title,
-          description,
-          historical_average_grade,
-          universities!inner (
-            name
-          ),
-          course_professors!inner (
-            professors!inner (
-              full_name
+      try {
+        // Fetch course details
+        const { data: courseData, error: courseError } = await supabase
+          .from("courses")
+          .select(`
+            id,
+            course_code,
+            subject_code,
+            title,
+            description,
+            historical_average_grade,
+            universities ( name ),
+            course_professors ( 
+              professors ( id, full_name )
             )
-          )
-        `)
-        .eq("id", courseId)
-        .single();
+          `)
+          .eq("id", courseId)
+          .single();
 
-      if (error) throw error;
-      setCourse(data as unknown as Course);
-    } catch (err) {
-      console.error("Error fetching course details:", err);
-      setError("Failed to load course details.");
-    } finally {
-      setLoading(false);
-    }
-  };
+        if (courseError) throw courseError;
+        setCourse(courseData as Course);
 
-  const fetchReviews = async () => {
-    if (!courseId) return;
+        // Fetch reviews
+        const { data: reviewData, error: reviewError } = await supabase
+          .from("course_reviews")
+          .select("*")
+          .eq("course_id", courseId)
+          .order("created_at", { ascending: false });
 
-    try {
-      const { data, error } = await supabase
-        .from("course_reviews")
-        .select("*")
-        .eq("course_id", courseId)
-        .order("created_at", { ascending: false });
+        if (reviewError) throw reviewError;
 
-      if (error) throw error;
-      console.log('supabase review response', data)
-      setReviews(data as Review[]);
-    } catch (err) {
-      console.error("Error fetching reviews:", err);
-      setError("Failed to load reviews.");
-    }
-  };
+        const validReviews = reviewData as Review[];
+        setReviews(validReviews);
 
-  useEffect(() => {
-    if (courseId) {
-      fetchCourseDetails();
-      fetchReviews();
-    }
+        // Calculate statistics from valid reviews
+        if (validReviews && validReviews.length > 0) {
+          const stats = validReviews.reduce((acc, review) => ({
+            averageRating: acc.averageRating + (review.rating || 0),
+            averageDifficulty: acc.averageDifficulty + (review.difficulty_rating || 0),
+            averageWorkload: acc.averageWorkload + (review.workload_hours || 0),
+            recommendationRate: acc.recommendationRate + (review.would_recommend ? 1 : 0),
+            totalReviews: acc.totalReviews + 1
+          }), {
+            averageRating: 0,
+            averageDifficulty: 0,
+            averageWorkload: 0,
+            recommendationRate: 0,
+            totalReviews: 0
+          });
+
+          const totalReviews = stats.totalReviews || 1; // Prevent division by zero
+          setStatistics({
+            averageRating: Number((stats.averageRating / totalReviews).toFixed(1)) || 0,
+            averageDifficulty: Number((stats.averageDifficulty / totalReviews).toFixed(1)) || 0,
+            averageWorkload: Number((stats.averageWorkload / totalReviews).toFixed(1)) || 0,
+            recommendationRate: Number(((stats.recommendationRate / totalReviews) * 100).toFixed(0)) || 0,
+            totalReviews: stats.totalReviews
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [courseId]);
 
-  const validateReview = () => {
-    const rating = parseFloat(newRating);
-    if (isNaN(rating) || rating < 0 || rating > 5) {
-      setError("Rating must be a number between 0 and 5");
-      return false;
-    }
-    if (!newComment.trim()) {
-      setError("Please provide a comment");
-      return false;
-    }
-    return true;
-  };
-
-  const handleSubmitReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!courseId || !validateReview()) return;
-
-    if (!user) {
-      setError("Please sign in to submit a review");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const ratingValue = parseFloat(newRating);
-      const { error } = await supabase.from("course_reviews").insert({
-        course_id: courseId,
-        rating: ratingValue,
-        comment: newComment.trim(),
-        user_id: user.id,
-      });
-
-      if (error) throw error;
-
-      setSuccess("Review submitted successfully!");
-      await fetchReviews();
-
-      setNewRating("0");
-      setNewComment("");
-    } catch (err) {
-      console.error("Error submitting review:", err);
-      setError("Failed to submit review. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   if (loading || !course) {
-    return <div className="container mx-auto py-6">Loading course details...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 w-64 bg-gray-200 rounded"></div>
+          <div className="h-4 w-48 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
   }
 
-  const instructor = course.course_professors?.[0]?.professors?.full_name || "Unknown Instructor";
-  const universityName = course.universities?.[0]?.name || "Unknown University";
-
   return (
-    <main className="mx-auto w-full">
-      <div className="bg-md-purple w-full border-t-2 border-purple-600/20 py-8 rounded-b-2xl shadow-md">
-        <div className="px-4 flex justify-between items-start">
+    <main className="min-h-screen bg-gray-50">
+      {/* Header Section */}
+      <div className="bg-white border-b">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+            {/* Course Info */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-4xl font-bold text-gray-900">
+                  {course.subject_code} {course.course_code}
+                </h1>
+                {course.historical_average_grade && (
+                  <Badge variant="secondary" className="text-lg">
+                    Avg Grade: {course.historical_average_grade.toFixed(1)}
+                  </Badge>
+                )}
+              </div>
+              <h2 className="text-xl text-gray-600 mb-4">{course.title}</h2>
 
-          {/* Left side - University Info */}
-          <div className="flex-1">
-            <h1 className="text-5xl font-extrabold text-rbc-purple">{course.subject_code} {course.course_code} </h1>
-            <p className="text-lg text-white font-semibold py-2">{course.title}</p>
-            <div className="flex gap-4 mt-4">
-              <div className="w-64">
-                <Select
-                  value={selectedProfessor}
-                  onValueChange={setSelectedProfessor}
-                >
-                  <SelectTrigger className="bg-white/90">
+              <div className="flex flex-wrap gap-4 mb-6">
+                <Select value={selectedProfessor} onValueChange={setSelectedProfessor}>
+                  <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Select Professor" />
                   </SelectTrigger>
                   <SelectContent>
-                    {course?.course_professors?.map((cp, index) => (
-                      <SelectItem
-                        key={index}
-                        value={cp.professors.full_name}
-                      >
+                    {course.course_professors?.map((cp) => (
+                      <SelectItem key={cp.professors.id} value={cp.professors.full_name}>
                         {cp.professors.full_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
 
-              <div className="w-48">
-                <Select
-                  value={selectedSemester}
-                  onValueChange={setSelectedSemester}
-                >
-                  <SelectTrigger className="bg-white/90">
+                <Select value={selectedSemester} onValueChange={setSelectedSemester}>
+                  <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Select Semester" />
                   </SelectTrigger>
                   <SelectContent>
                     {SEMESTERS.map((semester) => (
-                      <SelectItem
-                        key={semester}
-                        value={semester}
-                      >
+                      <SelectItem key={semester} value={semester}>
                         {semester}
                       </SelectItem>
                     ))}
@@ -293,162 +246,168 @@ export default function CourseDetailPage() {
                 </Select>
               </div>
             </div>
-          </div>
-          {/* Right side - Statistics */}
-          <div className="flex-1">
-            {/* Student Count & Acceptance Rate */}
-            <div className="flex justify-left gap-4 mb-2">
-              <div className="flex justify-center">
-                <div className="text-left">
-                  <div className="text-4xl text-white font-bold">Average Grade</div>
-                  <div className="text-3xl font-extrabold text-rbc-purple p-4 rounded-2xl w-16h-16 text-center bg-white/20">3.3</div>
-                  <Link href={`/courses/${courseId}/review`}>
-                    <Button  className="font-semibold m-2 mt-4 " size={"lg"}>
-                      + Add a Review
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
 
+            {/* Course Statistics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard
+                icon={<Star className="h-5 w-5 text-yellow-500" />}
+                value={statistics.averageRating}
+                label="Overall Rating"
+                sublabel={`from ${statistics.totalReviews} reviews`}
+              />
+              <StatCard
+                icon={<AlertTriangle className="h-5 w-5 text-red-500" />}
+                value={statistics.averageDifficulty}
+                label="Difficulty"
+                sublabel="out of 5"
+              />
+              <StatCard
+                icon={<Clock className="h-5 w-5 text-blue-500" />}
+                value={statistics.averageWorkload}
+                label="Weekly Hours"
+                sublabel="average workload"
+              />
+              <StatCard
+                icon={<ThumbsUp className="h-5 w-5 text-green-500" />}
+                value={statistics.recommendationRate}
+                label="Would Take Again"
+                sublabel="% of students"
+                isPercentage
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="px-8 bg-slight-purple">
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        <Tabs defaultValue="reviews" onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full md:w-[400px] grid-cols-2">
+            <TabsTrigger value="reviews">Reviews</TabsTrigger>
+            <TabsTrigger value="advice">
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Course Advice
+            </TabsTrigger>
+          </TabsList>
 
-        <h1 className="text-4xl font-bold py-8 text-rbc-purple">Reviews</h1>
-        <Card className="hidden">
-          <CardHeader>
-            <CardTitle>Submit Your Review</CardTitle>
-            {!user && (
-              <CardDescription className="text-red-500">
-                Please sign in to submit a review
-              </CardDescription>
-            )}
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            {success && (
-              <Alert className="mb-4">
-                <AlertDescription>{success}</AlertDescription>
-              </Alert>
-            )}
-            <form onSubmit={handleSubmitReview} className="space-y-4">
-              <div>
-                <label className="block mb-1">Rating (0-5):</label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="0.5"
-                  value={newRating}
-                  onChange={(e) => {
-                    setError(null);
-                    setNewRating(e.target.value);
-                  }}
-                  className="w-full"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-1">Comment:</label>
-                <Textarea
-                  value={newComment}
-                  onChange={(e) => {
-                    setError(null);
-                    setNewComment(e.target.value);
-                  }}
-                  className="w-full"
-                  rows={4}
-                  placeholder="Write your review here..."
-                  required
-                />
-              </div>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit Review"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-        {reviews.length > 0 ? (
-          <div className="space-y-4 pb-24 mt-8">
-            {reviews.map((review) => (
-              <Card className="bg-white rounded-3xl px-4 mx-4 my-2 shadow-md border-none" key={review.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    {/*<CardTitle>Rating: {review.rating.toFixed(1)}</CardTitle> */}
-                    <CardTitle className="text-2xl">Professor <span className="text-glow-purple">{instructor} </span> <span className="text-sm font-semibold mx-2 text-rpc-purple">FALL 2024</span></CardTitle>
-                    <CardDescription>
-                      {new Date(review.created_at).toLocaleDateString()}
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p>{review.comment}</p>
-                  <div className="flex flex-wrap gap-4 mt-4 items-center mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Grade received:</span>
-                      <span className="text-glow-purple">2.5</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Would you recommend:</span>
-                      <span className="text-glow-purple">No</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Class format:</span>
-                      <span className="text-glow-purple">In-person</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Mandatory Attendance:</span>
-                      <span className="text-glow-purple">Yes</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Textbook requirement:</span>
-                      <span className="text-glow-purple">No</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-green-500">3</span>
-                      <span className="text-gray-500"><ThumbsUp className="relative -top-1"/></span>
-                      <span className="text-red-500">0</span>
-                      <span className="text-gray-500"><ThumbsDown className="relative -top-0" /></span>
-                    </div>
-                  </div>
+          <TabsContent value="reviews" className="space-y-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-semibold">Course Reviews</h3>
+              <Link href={`/courses/${courseId}/review`}>
+                <Button size="lg">+ Add Review</Button>
+              </Link>
+            </div>
 
-                 <div className="flex flex-wrap gap-6">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Quality</span>
-                        <span className={`${getQualityColor(review.rating)} text-white px-3 py-1 rounded`}>
-                          {review.rating}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Difficulty</span>
-                        <span className={`${getDifficultyColor(review.difficulty_rating || 1)} text-white px-3 py-1 rounded`}>
-                          {review.difficulty_rating || 1}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Weekly Workload</span>
-                        <span className={`${getWorkloadColor(12)} text-white px-3 py-1 rounded`}>
-                          12 hrs
-                        </span>
-                      </div>
-                    </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <p>No reviews yet. Be the first to review!</p>
-        )}
+            <div className="space-y-4">
+              {reviews.map((review) => (
+                <ReviewCard key={review.id} review={review} professors={course.course_professors} />
+              ))}
+              {reviews.length === 0 && (
+                <Card>
+                  <CardContent className="py-8 text-center text-gray-500">
+                    <MessageCircle className="h-12 w-12 mx-auto mb-4" />
+                    <p className="text-lg">No reviews yet. Be the first to review!</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
 
+          <TabsContent value="advice">
+            <CourseAssistant courseId={courseId} />
+          </TabsContent>
+        </Tabs>
       </div>
-      <CourseAssistant courseId={courseId!} />
     </main>
   );
 }
+
+// Helper Components
+function StatCard({ icon, value, label, sublabel, isPercentage = false }) {
+  const displayValue = isNaN(value) ? '0' : isPercentage ? `${value}%` : value;
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <span className="text-2xl font-bold">{displayValue}</span>
+      </div>
+      <div className="text-sm">
+        <div className="font-medium text-gray-900">{label}</div>
+        <div className="text-gray-500">{sublabel}</div>
+      </div>
+    </Card>
+  );
+}
+
+function ReviewCard({ review, professors }) {
+  const professor = professors.find(p => p.professors.id === review.professor_id)?.professors.full_name || "Unknown Professor";
+
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              {professor}
+              <Badge variant="outline">{review.semester}</Badge>
+            </CardTitle>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <ThumbsUp className="h-4 w-4" />
+              <span className="text-sm">{review.helpful_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <ThumbsDown className="h-4 w-4" />
+              <span className="text-sm">{review.unhelpful_count || 0}</span>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-gray-700 mb-4">{review.comment}</p>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <span className="text-gray-500">Quality:</span>
+            <Badge className={`ml-2 ${getQualityColor(review.rating)}`}>
+              {review.rating?.toFixed(1) || "N/A"}
+            </Badge>
+          </div>
+          <div>
+            <span className="text-gray-500">Difficulty:</span>
+            <Badge className={`ml-2 ${getQualityColor(review.difficulty_rating)}`}>
+              {review.difficulty_rating?.toFixed(1) || "N/A"}
+            </Badge>
+          </div>
+          <div>
+            <span className="text-gray-500">Workload:</span>
+            <span className="font-medium ml-2">
+              {review.workload_hours || 0}hrs/week
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-500">Grade:</span>
+            <span className="font-medium ml-2">{review.grade_received || "N/A"}</span>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-4 text-sm">
+          <Badge variant={review.textbook_required ? "destructive" : "secondary"}>
+            {review.textbook_required ? "Textbook Required" : "No Textbook"}
+          </Badge>
+          <Badge variant={review.attendance_mandatory ? "destructive" : "secondary"}>
+            {review.attendance_mandatory ? "Attendance Required" : "Attendance Optional"}
+          </Badge>
+          <Badge variant="outline">{review.class_format || "Format Not Specified"}</Badge>
+          <Badge variant={review.would_recommend ? "success" : "destructive"}>
+            {review.would_recommend ? "Would Take Again" : "Would Not Take Again"}
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default CourseDetailPage;
