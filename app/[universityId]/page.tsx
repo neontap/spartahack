@@ -266,11 +266,15 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
         .eq("university_id", universityId)
         .range(fromIndex, toIndex);
 
-      if (currentSubject && currentCourseCode) {
-        query = query
-          .eq("subject_code", currentSubject)
-          .ilike("course_code", `%${currentCourseCode}%`);
-      } else if (currentCourseName) {
+      if (currentSubject) {
+        query = query.eq("subject_code", currentSubject);
+      }
+
+      if (currentCourseCode) {
+        query = query.ilike("course_code", `%${currentCourseCode}%`);
+      }
+
+      if (currentCourseName) {
         query = query.ilike("title", `%${currentCourseName}%`);
       }
 
