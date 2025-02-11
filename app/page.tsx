@@ -105,14 +105,14 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen relative bg-gradient-to-b from-white to-gray-50">
-      <div className="absolute top-0 left-0 right-0 z-0">
+      <div className="h-[525px] absolute inset-0 z-0">
         <Image
           src="/bg-landing.svg"
           alt="Background Image"
-          height={80}
+          height={759}
           width={1920}
           priority
-          className="w-full"
+          className="w-full min-h-full object-cover"
         />
       </div>
       
