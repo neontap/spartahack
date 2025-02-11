@@ -376,7 +376,7 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
     <main className="w-full min-h-screen bg-gray-50">
       {/* Logo section */}
       <div className="w-full bg-white shadow-sm">
-        <div className="mx-auto ">
+        <div className="mx-auto">
           <UniversityLogo
             universityName={university?.name || ""}
             universityLocation="East Lansing, MI"
