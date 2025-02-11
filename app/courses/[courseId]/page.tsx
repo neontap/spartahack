@@ -345,7 +345,13 @@ function StatCard({ icon, value, label, sublabel, isPercentage = false }) {
 }
 
 function ReviewCard({ review, professors }) {
-  const professor = professors.find(p => p.professors.id === review.professor_id)?.professors.full_name || "Unknown Professor";
+ // Flatten the nested array of professor objects
+  const allProfessors = professors.flatMap(cp => cp.professors);
+  // Find the matching professor by ID
+  const professorObj = allProfessors.find(prof => prof.id === review.professor_id);
+  // const professorName = professorObj ? professorObj.full_name : "Unknown Professor";
+  console.log(professors[0].professors)
+  const professorName = professors[0].professors.full_name;
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -353,7 +359,7 @@ function ReviewCard({ review, professors }) {
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="flex items-center gap-2">
-              {professor}
+              {professorName}
               <Badge variant="outline">{review.semester}</Badge>
             </CardTitle>
           </div>
