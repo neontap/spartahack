@@ -3,6 +3,7 @@ import HeaderAuth from "@/components/header-auth";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import Image from 'next/image';
 import { Gantari, Roboto } from "next/font/google";
+import EnvironmentBanner from "@/components/env-banner"
 import { ThemeProvider } from "next-themes";
 import {LoadingProvider} from "@/components/LoadingProvider";
 import Link from "next/link";
@@ -37,7 +38,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={gantari.className} suppressHydrationWarning>
+
       <body className="bg-background text-foreground">
+      <EnvironmentBanner />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -63,6 +66,7 @@ export default function RootLayout({
                   {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
                 </div>
               </nav>
+
               <div className="flex flex-col w-full rounded-lg">
                 {children}
               </div>
