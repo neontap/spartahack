@@ -19,8 +19,15 @@
   --muted-foreground: 266 5% 40%;
   --accent: 228 30% 80%;
   --accent-foreground: 266 5% 15%;
-  --destructive: 0 80% 41%;
+  --destructive: 358 65% 35%;
   --destructive-foreground: 266 5% 90%;
+  --rating-green: 142 60% 38% / 0.9;
+  --rating-green-faint: 142 60% 38% / 0.6;
+  --rating-yellow: 45 93% 47% / 0.9;
+  --rating-yellow-faint: 45 93% 47% / 0.6;
+  --rating-red: 358 65% 42% / 0.9;
+  --rating-red-faint: 358 65% 42% / 0.6;
+  --rating-blue: 217 91% 45% / 0.9;
   --border: 266 30% 50%;
   --input: 266 30% 41%;
   --ring: 266 42.9% 32.9%;
