@@ -352,8 +352,6 @@ function ReviewCard({review, professors, supabase}) {
   const allProfessors = professors.flatMap(cp => cp.professors);
   // Find the matching professor by ID
   const professorObj = allProfessors.find(prof => prof.id === review.professor_id);
-  // const professorName = professorObj ? professorObj.full_name : "Unknown Professor";
-  console.log(professors[0].professors)
   const professorName = professors[0].professors.full_name;
 
   const title = review.title || 'Title';
@@ -364,29 +362,50 @@ function ReviewCard({review, professors, supabase}) {
   });
   const [userVote, setUserVote] = useState<number | null>(null);
 
-  const loadUserVote = async (reviewId, setUserVote) => {
-    const { data: session } = await supabase.auth.getSession();
+  const loadUserVote = async () => {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('Session check:', { session, sessionError });  // Debug log
     if (!session?.user) return;
-    const { data } = await supabase
+
+    const { data, error } = await supabase
         .from('review_votes')
         .select('vote')
-        .match({
-          review_id: reviewId,
-          user_id: session.user.id
-        })
+        .eq('review_id', review.id)
+        .eq('user_id', session.user.id)
         .single();
+    if (error) {
+      console.log('Error loading user vote:', error);
+      return;
+    }
+    if (data && data.length === 1) {
+      setUserVote(data[0].vote);
+    }
+    else{
+      console.log('No vote found');
+    }
 
-    if (data) {
-      setUserVote(data.vote);
+    const { data: counts } = await supabase
+        .from('review_votes')
+        .select('vote')
+        .eq('review_id', review.id);
+
+    if (counts) {
+      const likes = counts.filter(v => v.vote === 1).length;
+      const dislikes = counts.filter(v => v.vote === -1).length;
+      setVoteCount({ likes, dislikes });
     }
   };
 
   useEffect(() => {
-    loadUserVote(review.id, setUserVote);
-  }, [review.id, supabase]);
+    loadUserVote();
+  }, [review.id]);
+
 
   const handleVote = async (newVote: number) => {
-    const { data: session } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('Session check:', { session, sessionError });  // Debug log
+    if (!session?.user) return;  // early return if no session or user
+
     if (!session?.user) {
       alert('Please sign in to vote');
       return;
@@ -457,7 +476,7 @@ function ReviewCard({review, professors, supabase}) {
             <div className="flex items-center gap-1">
               <button
                   onClick={() => handleVote(1)}  // 1 for like
-                  className={`flex items-center gap-1 ${userVote === 1 ? 'text-blue-500' : ''}`}
+                  className={`flex items-center gap-1 ${userVote === 1 ? 'text-grey-700' : ''}`}
               >
                 <ThumbsUp className="h-4 w-4"/>
                 <span>{voteCount.likes}</span>
@@ -465,8 +484,8 @@ function ReviewCard({review, professors, supabase}) {
             </div>
             <div className="flex items-center gap-1">
               <button
-                  onClick={() => handleVote(1)}  // 1 for like
-                  className={`flex items-center gap-1 ${userVote === 1 ? 'text-blue-500' : ''}`}
+                  onClick={() => handleVote(-1)}  // -1 for dislike
+                  className={`flex items-center gap-1 ${userVote === -1 ? 'text-grey-700' : ''}`}
               >
                 <ThumbsDown className="h-4 w-4"/>
                 <span>{voteCount.dislikes}</span>
