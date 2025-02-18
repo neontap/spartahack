@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { createBrowserClient } from '@supabase/ssr';
 import { Button } from "@/components/ui/button";
+import { createClient } from '@/utils/supabase/client';
 import {
   Select,
   SelectContent,
@@ -25,8 +26,9 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, Clock, Star, Dumbbell, MessageCircle } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Clock, Star, Dumbbell, MessageCircle } from 'lucide-react';
 import CourseAssistant from '@/components/CourseAssistant';
+import {SupabaseClient} from "@supabase/supabase-js";
 
 // Types remain similar but with added fields
 type Course = {
@@ -46,6 +48,9 @@ type Course = {
     }[];
   }[];
 };
+
+const supabase = createClient();
+
 // Helper functions for styling
 const getQualityColor = (rating: number) => {
   if (rating >= 4) return 'bg-rating-green text-white';
@@ -90,10 +95,6 @@ const SEMESTERS = [
 ];
 
 function CourseDetailPage() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
   const params = useParams();
   const courseId = typeof params.courseId === "string" ? parseInt(params.courseId) : null;
@@ -304,7 +305,8 @@ function CourseDetailPage() {
 
             <div className="space-y-4">
               {reviews.map((review) => (
-                <ReviewCard key={review.id} review={review} professors={course.course_professors} />
+                <ReviewCard key={review.id} review={review} professors={course.course_professors}
+                supabase={supabase}/>
               ))}
               {reviews.length === 0 && (
                 <Card>
@@ -344,7 +346,8 @@ function StatCard({ icon, value, label, sublabel, isPercentage = false }) {
   );
 }
 
-function ReviewCard({ review, professors }) {
+function ReviewCard({review, professors, supabase}) {
+
  // Flatten the nested array of professor objects
   const allProfessors = professors.flatMap(cp => cp.professors);
   // Find the matching professor by ID
@@ -354,6 +357,88 @@ function ReviewCard({ review, professors }) {
   const professorName = professors[0].professors.full_name;
 
   const title = review.title || 'Title';
+
+  const [voteCount, setVoteCount] = useState({
+    likes: review.helpful_count || 0,
+    dislikes: review.unhelpful_count || 0
+  });
+  const [userVote, setUserVote] = useState<number | null>(null);
+
+  const loadUserVote = async (reviewId, setUserVote) => {
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const { data } = await supabase
+        .from('review_votes')
+        .select('vote')
+        .match({
+          review_id: reviewId,
+          user_id: session.user.id
+        })
+        .single();
+
+    if (data) {
+      setUserVote(data.vote);
+    }
+  };
+
+  useEffect(() => {
+    loadUserVote(review.id, setUserVote);
+  }, [review.id, supabase]);
+
+  const handleVote = async (newVote: number) => {
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.user) {
+      alert('Please sign in to vote');
+      return;
+    }
+
+    try {
+      if (userVote === newVote) {
+        // remove vote if clicking same button
+        const { error } = await supabase
+            .from('review_votes')
+            .delete()
+            .match({
+              review_id: review.id,
+              user_id: session.user.id
+            });
+
+        if (error) throw error;
+        setUserVote(null);
+
+      } else {
+        // insert or update vote
+        const { error } = await supabase
+            .from('review_votes')
+            .upsert({
+              review_id: review.id,
+              user_id: session.user.id,
+              vote: newVote
+            }, {
+              onConflict: 'review_id, user_id'
+            });
+
+        if (error) throw error;
+        setUserVote(newVote);
+      }
+
+      // get updated counts
+      const { data: counts } = await supabase
+          .from('review_votes')
+          .select('vote')
+          .eq('review_id', review.id);
+
+      const likes = counts?.filter(v => v.vote === 1).length || 0;
+      const dislikes = counts?.filter(v => v.vote === -1).length || 0;
+
+      setVoteCount({ likes, dislikes });
+
+    } catch (error) {
+      console.error('Error voting:', error);
+      alert('Failed to save vote');
+    }
+  };
+
 
 
   return (
@@ -369,13 +454,23 @@ function ReviewCard({ review, professors }) {
             </CardTitle>
           </div>
           <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-              {/*<ThumbsUp className="h-4 w-4" />*/}
-              {/*<span className="text-sm">{review.helpful_count || 0}</span>*/}
+            <div className="flex items-center gap-1">
+              <button
+                  onClick={() => handleVote(1)}  // 1 for like
+                  className={`flex items-center gap-1 ${userVote === 1 ? 'text-blue-500' : ''}`}
+              >
+                <ThumbsUp className="h-4 w-4"/>
+                <span>{voteCount.likes}</span>
+              </button>
             </div>
             <div className="flex items-center gap-1">
-              {/*<ThumbsDown className="h-4 w-4" />*/}
-              {/*<span className="text-sm">{review.unhelpful_count || 0}</span>*/}
+              <button
+                  onClick={() => handleVote(1)}  // 1 for like
+                  className={`flex items-center gap-1 ${userVote === 1 ? 'text-blue-500' : ''}`}
+              >
+                <ThumbsDown className="h-4 w-4"/>
+                <span>{voteCount.dislikes}</span>
+              </button>
             </div>
           </div>
         </div>
