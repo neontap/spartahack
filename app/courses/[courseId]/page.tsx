@@ -353,18 +353,23 @@ function ReviewCard({ review, professors }) {
   console.log(professors[0].professors)
   const professorName = professors[0].professors.full_name;
 
+  const title = review.title || 'Title';
+
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="flex items-center gap-2">
-              {professorName}
+              <span >{title}</span>
+              {review.semester?
               <Badge variant="outline">{review.semester}</Badge>
+                  : null}
             </CardTitle>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1">
               {/*<ThumbsUp className="h-4 w-4" />*/}
               {/*<span className="text-sm">{review.helpful_count || 0}</span>*/}
             </div>
@@ -378,7 +383,7 @@ function ReviewCard({ review, professors }) {
       <CardContent>
         <p className="text-gray-700 mb-4">{review.comment}</p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
           <div>
             <span className="text-gray-500">Quality:</span>
             <Badge className={`ml-2 ${getQualityColor(review.rating)}`}>
@@ -395,6 +400,12 @@ function ReviewCard({ review, professors }) {
             <span className="text-gray-500">Workload:</span>
             <span className="font-medium ml-2">
               {review.workload_hours || 0}hrs/week
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-500">Professor:</span>
+            <span className="font-medium ml-2">
+              {professorName || 'Not Specified'}
             </span>
           </div>
           <div>
