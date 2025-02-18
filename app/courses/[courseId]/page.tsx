@@ -372,7 +372,6 @@ function ReviewCard({review, professors, supabase}) {
         .select('vote')
         .eq('review_id', review.id)
         .eq('user_id', session.user.id)
-        .single();
     if (error) {
       console.log('Error loading user vote:', error);
       return;
@@ -381,13 +380,18 @@ function ReviewCard({review, professors, supabase}) {
       setUserVote(data[0].vote);
     }
     else{
-      console.log('No vote found');
+      setUserVote(null);
     }
 
-    const { data: counts } = await supabase
+    const { data: counts, error: countsError } = await supabase
         .from('review_votes')
         .select('vote')
         .eq('review_id', review.id);
+
+    if (countsError) {
+      console.log('Error loading vote counts:', countsError);
+      return;
+    }
 
     if (counts) {
       const likes = counts.filter(v => v.vote === 1).length;
