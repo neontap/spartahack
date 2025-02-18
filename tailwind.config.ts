@@ -26,6 +26,13 @@ const config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        'rating-green': 'hsl(var(--rating-green))',
+        'rating-yellow': 'hsl(var(--rating-yellow))',
+        'rating-red': 'hsl(var(--rating-red))',
+        'rating-blue': 'hsl(var(--rating-blue))',
+        'rating-red-faint': 'hsl(var(--rating-red-faint))',
+        'rating-yellow-faint': 'hsl(var(--rating-yellow-faint))',
+        'rating-green-faint': 'hsl(var(--rating-green-faint))',
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         'rbc-purple': {
@@ -52,10 +59,6 @@ const config = {
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",

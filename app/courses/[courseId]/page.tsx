@@ -25,7 +25,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Book, Users, Clock, Calendar, Star, AlertTriangle, MessageCircle } from 'lucide-react';
+import { ThumbsUp, Clock, Star, Dumbbell, MessageCircle } from 'lucide-react';
 import CourseAssistant from '@/components/CourseAssistant';
 
 // Types remain similar but with added fields
@@ -48,9 +48,9 @@ type Course = {
 };
 // Helper functions for styling
 const getQualityColor = (rating: number) => {
-  if (rating >= 4) return 'bg-green-600 text-white';
-  if (rating >= 3) return 'bg-yellow-400 text-white';
-  return 'bg-red-600 text-white';
+  if (rating >= 4) return 'bg-rating-green text-white';
+  if (rating >= 3) return 'bg-rating-yellow text-white';
+  return 'bg-rating-red text-white';
 };
 
 const formatDate = (dateString: string) => {
@@ -254,25 +254,25 @@ function CourseDetailPage() {
             {/* Course Statistics */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard
-                icon={<Star className="h-5 w-5 text-yellow-500" />}
+                icon={<Star className="h-5 w-5 text-rating-yellow" />}
                 value={statistics.averageRating}
                 label="Overall Rating"
                 sublabel={`from ${statistics.totalReviews} reviews`}
               />
               <StatCard
-                icon={<AlertTriangle className="h-5 w-5 text-red-500" />}
+                icon={<Dumbbell className="h-5 w-5 text-rating-red" />}
                 value={statistics.averageDifficulty}
                 label="Difficulty"
                 sublabel="out of 5"
               />
               <StatCard
-                icon={<Clock className="h-5 w-5 text-blue-500" />}
+                icon={<Clock className="h-5 w-5 text-rating-blue" />}
                 value={statistics.averageWorkload}
                 label="Weekly Hours"
                 sublabel="average workload"
               />
               <StatCard
-                icon={<ThumbsUp className="h-5 w-5 text-green-500" />}
+                icon={<ThumbsUp className="h-5 w-5 text-rating-green" />}
                 value={statistics.recommendationRate}
                 label="Would Take Again"
                 sublabel="% of students"
@@ -365,12 +365,12 @@ function ReviewCard({ review, professors }) {
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
-              <ThumbsUp className="h-4 w-4" />
-              <span className="text-sm">{review.helpful_count || 0}</span>
+              {/*<ThumbsUp className="h-4 w-4" />*/}
+              {/*<span className="text-sm">{review.helpful_count || 0}</span>*/}
             </div>
             <div className="flex items-center gap-1">
-              <ThumbsDown className="h-4 w-4" />
-              <span className="text-sm">{review.unhelpful_count || 0}</span>
+              {/*<ThumbsDown className="h-4 w-4" />*/}
+              {/*<span className="text-sm">{review.unhelpful_count || 0}</span>*/}
             </div>
           </div>
         </div>
@@ -404,14 +404,28 @@ function ReviewCard({ review, professors }) {
         </div>
 
         <div className="mt-4 flex flex-wrap gap-4 text-sm">
-          <Badge variant={review.textbook_required ? "destructive" : "secondary"}>
+          <Badge
+              variant="secondary"
+              className={review.textbook_required ? 'bg-rating-red-faint text-black' : ''}
+          >
             {review.textbook_required ? "Textbook Required" : "No Textbook"}
           </Badge>
-          <Badge variant={review.attendance_mandatory ? "destructive" : "secondary"}>
+
+          <Badge
+              variant="secondary"
+              className={review.attendance_mandatory ? 'bg-rating-red-faint text-black' : ''}
+          >
             {review.attendance_mandatory ? "Attendance Required" : "Attendance Optional"}
           </Badge>
-          <Badge variant="outline">{review.class_format || "Format Not Specified"}</Badge>
-          <Badge variant={review.would_recommend ? "default" : "destructive"}>
+
+          <Badge variant="outline">
+            {review.class_format || "Format Not Specified"}
+          </Badge>
+
+          <Badge
+              variant="secondary"
+              className={!review.would_recommend ? 'bg-rating-red-faint text-black' : ''}
+          >
             {review.would_recommend ? "Would Take Again" : "Would Not Take Again"}
           </Badge>
         </div>
