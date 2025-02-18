@@ -364,7 +364,7 @@ function ReviewCard({review, professors, supabase}) {
 
   const loadUserVote = async () => {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    console.log('Session check:', { session, sessionError });  // Debug log
+    // console.log('Session check:', { session, sessionError });
     if (!session?.user) return;
 
     const { data, error } = await supabase
@@ -407,7 +407,7 @@ function ReviewCard({review, professors, supabase}) {
 
   const handleVote = async (newVote: number) => {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    console.log('Session check:', { session, sessionError });  // Debug log
+    // console.log('Session check:', { session, sessionError });
     if (!session?.user) return;  // early return if no session or user
 
     if (!session?.user) {
