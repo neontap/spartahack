@@ -92,8 +92,18 @@ function CourseCardSkeleton() {
 }
 
 function CourseCard({ course }: { course: Course }) {
-  const instructor =
-    course.course_professors?.[0]?.professors[0]?.full_name || "Unknown Instructor";
+  const instructors = course.course_professors?.map(({ professors: { full_name } }) => { // fix the type of professors
+    // split the full name into parts
+    const nameParts = full_name.split(' ');
+
+    // take first letter of first name and the last name
+    const firstInitial = nameParts[0][0];  // first letter of first name
+    const lastName = nameParts[nameParts.length - 1];  // last word as last name
+
+    return `${firstInitial}. ${lastName}`;
+  })
+      .slice(-3)
+      .join(', ') || "Unknown Instructor";
 
   const getQualityColor = (rating: number | null) => {
     if (!rating) return 'text-gray-400';
@@ -146,7 +156,7 @@ function CourseCard({ course }: { course: Course }) {
         <CardContent>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Users className="h-4 w-4" />
-            <span>{instructor}</span>
+            <span>{instructors}</span>
           </div>
         </CardContent>
 
@@ -184,7 +194,7 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
   const debouncedFetchCourses = useCallback(
     _.debounce(async (currentPage: number, subject: string, code: string, name: string) => {
       try {
-        await fetchCourses(currentPage, subject, code, name);
+        await fetchCourses(currentPage, subject, name);
       } catch (err) {
         setError("Failed to fetch courses. Please try again.");
       }
@@ -230,7 +240,6 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
   const fetchCourses = async (
       currentPage: number = page,
       currentSubject: string = subjectCode,
-      currentCourseCode: string = courseCode,
       currentCourseName: string = courseName
   ) => {
     if (!initialLoading) {
@@ -264,7 +273,10 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
         )
       `)
           .eq("university_id", universityId)
+          .limit(12)
           .range(fromIndex, toIndex);
+
+
 
       // parse the search input to extract subject and course number
       if (currentCourseName) {
@@ -305,14 +317,14 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
         };
       });
 
+      processedData = _.orderBy(processedData, ['review_count'], ['desc']);
+
       // apply filters and sorting
       if (filterMinRating) {
         processedData = processedData.filter(course =>
             course.average_rating && course.average_rating >= filterMinRating
         );
       }
-
-      processedData = _.orderBy(processedData, ['review_count'], ['desc']);
 
       setCourses(processedData);
     } catch (error) {
@@ -344,7 +356,7 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
   const handleSearch = () => {
     setPage(1);
     debouncedFetchCourses.cancel();
-    fetchCourses(1, subjectCode, courseCode, courseName);
+    fetchCourses(1, subjectCode, courseName);
   };
 
   const handleNextPage = () => {
