@@ -32,7 +32,7 @@ const CourseReviewForm = () => {
     studyMaterialUsefulness: 3, // How useful was the course material?
     examDifficulty: 3, // How difficult are the exams?
     assignmentDifficulty: 3, // How difficult are the assignments?
-    hoursPerWeek: 6,
+    hoursPerWeek: 12,
     gradingFairness: "", // Enum: Very Unfair, Unfair, Neutral, Fair, Very Fair
     grade: null,
     attendance: "",
@@ -165,43 +165,47 @@ const CourseReviewForm = () => {
         return false;
     }
   };
-
   const sliderSx = {
-    "& .MuiSlider-track": {
-      backgroundColor: "#4F3078"
+    '& .MuiSlider-track': {
+      backgroundColor: '#4F3078',
+      color: '#4F3078',
     },
-    "& .MuiSlider-rail": {
-      backgroundColor: "#e2e8f0"
+    '& .MuiSlider-rail': {
+      backgroundColor: '#e2e8f0',
     },
-    "& .MuiSlider-thumb": {
-      backgroundColor: "#fff",
-      border: "2px solid #4F3078",
-      "&:hover": {
-        boxShadow: "none"
+    '& .MuiSlider-thumb': {
+      backgroundColor: '#fff',
+      border: '2px solid #4F3078',
+      '&:hover': {
+        boxShadow: 'none',
       },
-      "&:focus, &.Mui-focusVisible": {
-        boxShadow: "0 0 0 8px rgba(79, 48, 120, 0.16)",
-        outline: "none"
+      '&:focus, &.Mui-focusVisible': {
+        boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
+        outline: 'none',
       },
-      "&.Mui-active": {
-        boxShadow: "0 0 0 14px rgba(79, 48, 120, 0.16)"
-      }
+      '&.Mui-active': {
+        boxShadow: '0 0 0 14px rgba(79, 48, 120, 0.16)',
+      },
     },
-    "& .MuiSlider-mark": {
-      backgroundColor: "#4F3078",
-      height: "8px",
-      width: "2px",
-      "&.MuiSlider-markActive": {
-        backgroundColor: "#4F3078"
-      }
+    '& .MuiSlider-mark': {
+      backgroundColor: '#4F3078',
+      height: '8px',
+      width: '2px',
+      '&.MuiSlider-markActive': {
+        backgroundColor: '#4F3078',
+      },
     },
-    "& .MuiSlider-markLabel": {
-      color: "#666",
-      fontSize: "0.875rem"
+    '& .MuiSlider-markLabel': {
+      color: '#666',
+      fontSize: '0.875rem',
     },
-    "& .MuiSlider-valueLabel": {
-      backgroundColor: "#4F3078"
-    }
+    '& .MuiSlider-valueLabel': {
+      backgroundColor: '#4F3078',
+    },
+    // Override focus states
+    '&.Mui-focused .MuiSlider-thumb': {
+      boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
+    },
   };
 
   const renderStepContent = () => {
