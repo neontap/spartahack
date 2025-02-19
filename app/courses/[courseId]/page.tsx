@@ -220,46 +220,46 @@ function CourseDetailPage() {
               </div>
               <h2 className="text-xl text-gray-600 mb-4">{course.title}</h2>
 
-              <div className="flex flex-wrap gap-4 mb-6">
-                <Select
-                  value={selectedProfessor}
-                  onValueChange={setSelectedProfessor}
-                >
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Select Professor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {course.course_professors?.flatMap((cp) => {
-                      const profArray = Array.isArray(cp.professors)
-                        ? cp.professors
-                        : cp.professors
-                        ? [cp.professors]
-                        : [];
-                      return profArray.map((prof) => (
-                        <SelectItem key={prof.id} value={prof.full_name}>
-                          {prof.full_name}
-                        </SelectItem>
-                      ));
-                    })}
-                  </SelectContent>
-                </Select>
+              {/*<div className="flex flex-wrap gap-4 mb-6">*/}
+              {/*  <Select*/}
+              {/*    value={selectedProfessor}*/}
+              {/*    onValueChange={setSelectedProfessor}*/}
+              {/*  >*/}
+              {/*    <SelectTrigger className="w-[200px]">*/}
+              {/*      <SelectValue placeholder="Select Professor" />*/}
+              {/*    </SelectTrigger>*/}
+              {/*    <SelectContent>*/}
+              {/*      {course.course_professors?.flatMap((cp) => {*/}
+              {/*        const profArray = Array.isArray(cp.professors)*/}
+              {/*          ? cp.professors*/}
+              {/*          : cp.professors*/}
+              {/*          ? [cp.professors]*/}
+              {/*          : [];*/}
+              {/*        return profArray.map((prof) => (*/}
+              {/*          <SelectItem key={prof.id} value={prof.full_name}>*/}
+              {/*            {prof.full_name}*/}
+              {/*          </SelectItem>*/}
+              {/*        ));*/}
+              {/*      })}*/}
+              {/*    </SelectContent>*/}
+              {/*  </Select>*/}
 
-                <Select
-                  value={selectedSemester}
-                  onValueChange={setSelectedSemester}
-                >
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Select Semester" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SEMESTERS.map((semester) => (
-                      <SelectItem key={semester} value={semester}>
-                        {semester}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/*  <Select*/}
+              {/*    value={selectedSemester}*/}
+              {/*    onValueChange={setSelectedSemester}*/}
+              {/*  >*/}
+              {/*    <SelectTrigger className="w-[200px]">*/}
+              {/*      <SelectValue placeholder="Select Semester" />*/}
+              {/*    </SelectTrigger>*/}
+              {/*    <SelectContent>*/}
+              {/*      {SEMESTERS.map((semester) => (*/}
+              {/*        <SelectItem key={semester} value={semester}>*/}
+              {/*          {semester}*/}
+              {/*        </SelectItem>*/}
+              {/*      ))}*/}
+              {/*    </SelectContent>*/}
+              {/*  </Select>*/}
+              {/*</div>*/}
             </div>
 
             {/* Course Statistics */}
