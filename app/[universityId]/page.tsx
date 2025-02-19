@@ -49,9 +49,9 @@ type Course = {
   }[];
   course_professors: {
     professors: {
-      full_name?: any;
+      full_name: any;
     }[];
-  }[];
+  }[] | undefined;
   reviews: {
     rating: number;
     is_deleted: boolean;
@@ -92,7 +92,7 @@ function CourseCardSkeleton() {
 }
 
 function CourseCard({ course }: { course: Course }) {
-  const instructors = course.course_professors?.map(({ professors: { full_name } }) => { // fix the type of professors
+  const instructors = course.course_professors?.map(({ professors: { full_name } }) => {
     // split the full name into parts
     const nameParts = full_name.split(' ');
 
@@ -273,7 +273,6 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
         )
       `)
           .eq("university_id", universityId)
-          .limit(12)
           .range(fromIndex, toIndex);
 
 
