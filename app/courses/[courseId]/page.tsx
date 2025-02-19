@@ -541,8 +541,10 @@ function ReviewCard({
 
       <CardContent className="space-y-3">
         {/* Main Comment */}
-        <span className="text-gray-500 text-sm">Review:</span>
-        <p className="text-gray-700 text-sm">{review.comment}</p>
+        <div className="pt-1">
+          <span className="text-gray-500 text-sm">Review:</span>
+          <p className="text-sm text-gray-700 mt-0.5">{review.comment}</p>
+        </div>
         {/* Advice - Only shown if present */}
         {review.advice && (
             <div className="pt-1">
@@ -581,16 +583,16 @@ function ReviewCard({
           <div className="flex items-center gap-2">
             <span className="text-gray-500 text-sm">Mandatory Attendance:</span>
             <span className="text-sm">{review.mandatory_attendance !== undefined
-                                      ? review.mandatory_attendance === true
-                                      ? 'Yes'
-                                      : 'No' : "N/A"}</span>
+                ? review.mandatory_attendance === true
+                    ? 'Yes'
+                    : 'No' : "N/A"}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-gray-500 text-sm">Required Textbook:</span>
             <span className="text-sm">{review.textbook_required !== undefined
-                                      ? review.textbook_required === true
-                                          ? 'Yes'
-                                          : 'No' : "N/A"}</span>
+                ? review.textbook_required === true
+                    ? 'Yes'
+                    : 'No' : "N/A"}</span>
           </div>
 
         </div>
