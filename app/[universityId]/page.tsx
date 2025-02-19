@@ -228,10 +228,10 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
   };
 
   const fetchCourses = async (
-    currentPage: number = page,
-    currentSubject: string = subjectCode,
-    currentCourseCode: string = courseCode,
-    currentCourseName: string = courseName
+      currentPage: number = page,
+      currentSubject: string = subjectCode,
+      currentCourseCode: string = courseCode,
+      currentCourseName: string = courseName
   ) => {
     if (!initialLoading) {
       setLoading(true);
@@ -243,39 +243,47 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
       const toIndex = currentPage * pageSize - 1;
 
       let query = supabase
-        .from("courses")
-        .select(`
-          id,
-          course_code,
-          title,
-          subject_code,
-          historical_average_grade,
-          universities!inner (
-            name
-          ),
-          course_professors!inner (
-            professors!inner (
-              full_name
-            )
-          ),
-          course_reviews (
-            rating,
-            is_deleted
+          .from("courses")
+          .select(`
+        id,
+        course_code,
+        title,
+        subject_code,
+        historical_average_grade,
+        universities!inner (
+          name
+        ),
+        course_professors!inner (
+          professors!inner (
+            full_name
           )
-        `)
-        .eq("university_id", universityId)
-        .range(fromIndex, toIndex);
+        ),
+        course_reviews (
+          rating,
+          is_deleted
+        )
+      `)
+          .eq("university_id", universityId)
+          .range(fromIndex, toIndex);
 
+      // parse the search input to extract subject and course number
+      if (currentCourseName) {
+        const parts = currentCourseName.trim().split(/\s+/);
+
+        if (parts.length > 0) {
+          // if we have a subject code (e.g. "CSE")
+          query = query.ilike("subject_code", `${parts[0]}%`);
+
+          // if we also have a course number or partial number (e.g. "2" or "23")
+          if (parts.length > 1) {
+            query = query.ilike("course_code", `${parts[1]}%`);
+          }
+        }
+      }
+
+      // keep existing subject filter if it's set
       if (currentSubject) {
         query = query.eq("subject_code", currentSubject);
-      }
-
-      if (currentCourseCode) {
-        query = query.ilike("course_code", `%${currentCourseCode}%`);
-      }
-
-      if (currentCourseName) {
-        query = query.ilike("title", `%${currentCourseName}%`);
       }
 
       const { data, error } = await query;
@@ -286,8 +294,8 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
         const validReviews = course.course_reviews?.filter(r => !r.is_deleted) || [];
         const reviewCount = validReviews.length;
         const averageRating = reviewCount > 0
-          ? validReviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviewCount
-          : null;
+            ? validReviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviewCount
+            : null;
 
         return {
           ...course,
@@ -297,17 +305,17 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
         };
       });
 
-      // Apply filters and sorting
+      // apply filters and sorting
       if (filterMinRating) {
         processedData = processedData.filter(course =>
-          course.average_rating && course.average_rating >= filterMinRating
+            course.average_rating && course.average_rating >= filterMinRating
         );
       }
 
       processedData = _.orderBy(
-        processedData,
-        [sortBy],
-        [sortBy === "rating" ? "desc" : "desc"]
+          processedData,
+          [sortBy],
+          [sortBy === "rating" ? "desc" : "desc"]
       );
 
       setCourses(processedData);
@@ -393,65 +401,61 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
             </h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-4">
+              {/* First row */}
+              <div>
                 <Select
-                  onValueChange={(value) => setSubjectCode(value === "all" ? "" : value)}
-                  value={subjectCode || "all"} // if subjectCode is "", show "all"
+                    onValueChange={(value) => setSubjectCode(value === "all" ? "" : value)}
+                    value={subjectCode || "all"}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Subject" />
+                    <SelectValue placeholder="Select Subject"/>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Subjects</SelectItem>
                     {subjects.map((subject) => (
-                      <SelectItem key={subject} value={subject}>
-                        {subject}
-                      </SelectItem>
+                        <SelectItem key={subject} value={subject}>
+                          {subject}
+                        </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Input
-                  placeholder="Course Code (e.g., 101)"
-                  value={courseCode}
-                  onChange={(e) => setCourseCode(e.target.value)}
-                />
               </div>
 
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search by course name"
+              <div>
+                <Select
+                    value={filterMinRating !== null ? filterMinRating.toString() : "all"}
+                    onValueChange={(value) => setFilterMinRating(value === "all" ? null : Number(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Min Rating"/>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Any Rating</SelectItem>
+                    <SelectItem value="4">4+ Stars</SelectItem>
+                    <SelectItem value="3">3+ Stars</SelectItem>
+                    <SelectItem value="2">2+ Stars</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Second row - full width search */}
+              <div className="relative md:col-span-2">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400"/>
+                <Input
+                    placeholder="Search by subject name and code"
                     className="pl-10"
                     value={courseName}
                     onChange={(e) => setCourseName(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  />
-                </div>
-                <div className="flex gap-4">
-                  <Select
-                    value={filterMinRating !== null ? filterMinRating.toString() : "all"}
-                    onValueChange={(value) => setFilterMinRating(value === "all" ? null : Number(value))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Min Rating" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Any Rating</SelectItem>
-                      <SelectItem value="4">4+ Stars</SelectItem>
-                      <SelectItem value="3">3+ Stars</SelectItem>
-                      <SelectItem value="2">2+ Stars</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                />
               </div>
             </div>
 
             <div className="flex justify-center">
               <Button
-                onClick={handleSearch}
-                className="w-full md:w-auto"
-                size="lg"
+                  onClick={handleSearch}
+                  className="w-full md:w-auto"
+                  size="lg"
               >
                 Search Courses
               </Button>
@@ -462,44 +466,44 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
 
       {/* Error Alert */}
       {error && (
-        <div className="container mx-auto px-4 mb-6">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        </div>
+          <div className="container mx-auto px-4 mb-6">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4"/>
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
       )}
 
       {/* Course List */}
       <div className="container mx-auto px-4 mb-8">
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <CourseCardSkeleton key={i} />
-            ))}
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                  <CourseCardSkeleton key={i}/>
+              ))}
+            </div>
         ) : courses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {courses.map((course) => (
+                  <CourseCard key={course.id} course={course}/>
+              ))}
+            </div>
         ) : (
-          <div className="text-center py-12">
-            <GraduationCap className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-semibold text-gray-900">No courses found</h3>
-            <p className="mt-2 text-gray-500">Try adjusting your search criteria</p>
-          </div>
+            <div className="text-center py-12">
+              <GraduationCap className="mx-auto h-12 w-12 text-gray-400"/>
+              <h3 className="mt-4 text-lg font-semibold text-gray-900">No courses found</h3>
+              <p className="mt-2 text-gray-500">Try adjusting your search criteria</p>
+            </div>
         )}
 
         {/* Pagination */}
         {courses.length > 0 && (
-          <div className="flex justify-center items-center gap-4 mt-8">
-            <Button
-              onClick={handlePreviousPage}
-              disabled={page === 1 || loading}
-              variant="outline"
+            <div className="flex justify-center items-center gap-4 mt-8">
+              <Button
+                  onClick={handlePreviousPage}
+                  disabled={page === 1 || loading}
+                  variant="outline"
               className="gap-2"
             >
               Previous
