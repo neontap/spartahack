@@ -67,7 +67,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?redirect_to=/protected/reset-password`,
+    redirectTo: `${origin}/auth/callback?redirect_to=/reset-password`,
   });
 
   if (error) {
@@ -99,7 +99,7 @@ export const resetPasswordAction = async (formData: FormData) => {
   if (!password || !confirmPassword) {
     encodedRedirect(
       "error",
-      "/protected/reset-password",
+      "/reset-password",
       "Password and confirm password are required",
     );
   }
@@ -107,28 +107,53 @@ export const resetPasswordAction = async (formData: FormData) => {
   if (password !== confirmPassword) {
     encodedRedirect(
       "error",
-      "/protected/reset-password",
+      "/reset-password",
       "Passwords do not match",
     );
   }
 
-  const { error } = await supabase.auth.updateUser({
-    password: password,
-  });
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (error) {
-    encodedRedirect(
-      "error",
-      "/protected/reset-password",
-      "Password update failed",
+  if (!session) {
+    return encodedRedirect(
+        "error",
+        "/reset-password",
+        "No active session found. Please try the reset password link again.",
     );
   }
 
-  encodedRedirect("success", "/protected/reset-password", "Password updated");
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: password,
+  });
+
+  if (updateError) {
+    // pass through the exact error message from Supabase
+    return encodedRedirect(
+        "error",
+        "/reset-password",
+        updateError.message
+    );
+  }
+
+  // sign out after successful password update
+  const { error: signOutError } = await supabase.auth.signOut();
+
+  if (signOutError) {
+    console.error("Sign out error:", signOutError);
+    // redirect to sign in even if sign out fails
+  }
+
+  return encodedRedirect("success", "/sign-in", "Password updated");
 };
 
 export const signOutAction = async () => {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    console.error('Signout error:', error.message);
+    return redirect('/'); // or wherever you want to redirect on error
+  }
+
   return redirect("/sign-in");
 };
