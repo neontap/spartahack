@@ -68,6 +68,8 @@ type Review = {
   unhelpful_count: number;
   professor_id: number;
   semester: string;
+  textbook_required: boolean;
+  mandatory_attendance: boolean;
 };
 
 const SEMESTERS = [
@@ -84,9 +86,9 @@ const supabase = createClient();
 
 // ----- Helper Functions -----
 const getQualityColor = (rating: number) => {
-  if (rating >= 4) return "bg-rating-green text-white";
+  if (rating >= 4) return "bg-rating-red text-white";
   if (rating >= 3) return "bg-rating-yellow text-white";
-  return "bg-rating-red text-white";
+  return "bg-rating-green text-white";
 };
 
 // ----- Main Component -----
@@ -300,13 +302,13 @@ function CourseDetailPage() {
           onValueChange={setActiveTab}
           className="space-y-6"
         >
-          <TabsList className="grid w-full md:w-[400px] grid-cols-2">
-            <TabsTrigger value="reviews">Reviews</TabsTrigger>
-            <TabsTrigger value="advice">
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Course Advice
-            </TabsTrigger>
-          </TabsList>
+          {/*<TabsList className="grid w-full md:w-[400px] grid-cols-2">*/}
+          {/*  <TabsTrigger value="reviews">Reviews</TabsTrigger>*/}
+          {/*  <TabsTrigger value="advice">*/}
+          {/*    <MessageCircle className="h-4 w-4 mr-2" />*/}
+          {/*    Course Advice*/}
+          {/*  </TabsTrigger>*/}
+          {/*</TabsList>*/}
 
           <TabsContent value="reviews" className="space-y-6">
             <div className="flex justify-between items-center mb-6">
@@ -394,7 +396,7 @@ function ReviewCard({
   const professorObj = allProfessors.find(
     (prof) => prof.id === review.professor_id
   );
-  const professorName = professorObj ? professorObj.full_name : "Not Specified";
+  // const professorName = professorObj ? professorObj.full_name : "Not Specified";
 
   const [voteCount, setVoteCount] = useState({
     likes: review.helpful_count || 0,
@@ -491,6 +493,9 @@ function ReviewCard({
       alert("Failed to save vote");
     }
   };
+  console.log(review);
+  console.log(review.textbook_required);
+  console.log(review.mandatory_attendance);
 
   return (
     <Card className="hover:shadow-md transition-shadow duration-200">
@@ -498,7 +503,7 @@ function ReviewCard({
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold">{professorName}</h3>
+              {/*<h3 className="font-semibold">{professorName}</h3>*/}
               {review.semester && (
                 <Badge variant="outline" className="text-xs">{review.semester}</Badge>
               )}
@@ -536,10 +541,17 @@ function ReviewCard({
 
       <CardContent className="space-y-3">
         {/* Main Comment */}
+        <span className="text-gray-500 text-sm">Review:</span>
         <p className="text-gray-700 text-sm">{review.comment}</p>
-
+        {/* Advice - Only shown if present */}
+        {review.advice && (
+            <div className="pt-1">
+              <span className="text-gray-500 text-sm">Advice:</span>
+              <p className="text-sm text-gray-700 mt-0.5">{review.advice}</p>
+            </div>
+        )}
         {/* Metrics Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
           <div className="flex items-center gap-2">
             <span className="text-gray-500 text-sm">Difficulty:</span>
             <Badge className={`text-sm ${getQualityColor(review.assignment_difficulty)}`}>
@@ -547,8 +559,8 @@ function ReviewCard({
             </Badge>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-sm">Usefulness:</span>
-            <Badge className={`text-sm${getQualityColor(review.study_material_usefulness)}`}>
+            <span className="text-gray-500 text-sm">Relevance:</span>
+            <Badge className="text-sm">
               {review.study_material_usefulness.toFixed(1)}
             </Badge>
           </div>
@@ -563,18 +575,25 @@ function ReviewCard({
 */}
 
           <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-sm">Fairness:</span>
+            <span className="text-gray-500 text-sm">Grading Fairness:</span>
             <span className="text-sm">{review.grading_fairness || "N/A"}</span>
           </div>
-        </div>
-
-        {/* Advice - Only shown if present */}
-        {review.advice && (
-          <div className="pt-1">
-            <span className="text-gray-500 text-sm">Advice:</span>
-            <p className="text-sm text-gray-700 mt-0.5">{review.advice}</p>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500 text-sm">Mandatory Attendance:</span>
+            <span className="text-sm">{review.mandatory_attendance !== undefined
+                                      ? review.mandatory_attendance === true
+                                      ? 'Yes'
+                                      : 'No' : "N/A"}</span>
           </div>
-        )}
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500 text-sm">Required Textbook:</span>
+            <span className="text-sm">{review.textbook_required !== undefined
+                                      ? review.textbook_required === true
+                                          ? 'Yes'
+                                          : 'No' : "N/A"}</span>
+          </div>
+
+        </div>
       </CardContent>
     </Card>
   );
