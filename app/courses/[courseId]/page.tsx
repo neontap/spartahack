@@ -339,7 +339,7 @@ function CourseDetailPage() {
           </TabsContent>
 
           <TabsContent value="advice">
-            <CourseAssistant courseId={courseId} />
+            {/*<CourseAssistant courseId={courseId} />*/}
           </TabsContent>
         </Tabs>
       </div>
