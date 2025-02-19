@@ -132,7 +132,7 @@ export default function HomePage() {
 
           <div className="w-full max-w-xl mx-auto space-y-4">
             <h1 className="text-center text-3xl font-bold text-gray-800 mb-6">
-              Find Your Perfect University Course
+              Your Guide to the Best University Courses
             </h1>
 
             <Popover open={open} onOpenChange={setOpen}>
