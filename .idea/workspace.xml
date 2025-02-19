@@ -5,6 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fc0e8467-4ea9-4bc7-8913-26c3bd531485" name="Changes" comment="conflict resolution, main merge">
+      <change afterPath="$PROJECT_DIR$/app/(auth-pages)/reset-password/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/actions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/app/actions.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/courses/[courseId]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/courses/[courseId]/page.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -15,14 +18,26 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="TypeScript JSX File" />
         <option value="TypeScript File" />
+        <option value="TypeScript JSX File" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;stdmitry04&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/neontap/spartahack.git&quot;,
+    &quot;accountId&quot;: &quot;a0329672-c4bf-4989-b767-1ada5e0c4305&quot;
+  }
+}</component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
   </component>
@@ -68,6 +83,9 @@
       <workItem from="1738444777771" duration="1113000" />
       <workItem from="1738463083509" duration="858000" />
       <workItem from="1738463948127" duration="12429000" />
+      <workItem from="1739926690042" duration="304000" />
+      <workItem from="1739928281535" duration="437000" />
+      <workItem from="1739937221451" duration="8297000" />
     </task>
     <task id="LOCAL-00001" summary="conflict resolution, main merge">
       <option name="closed" value="true" />
