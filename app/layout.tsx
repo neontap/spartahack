@@ -17,6 +17,7 @@ export const metadata = {
   metadataBase: new URL(defaultUrl),
   title: "CourseChecker",
   description: "Find reviews on your courses.",
+  icons: "/coursecheckminilogo.svg",
 };
 
 const gantari = Gantari({
@@ -50,7 +51,7 @@ export default function RootLayout({
           <LoadingProvider>
           <main className="min-h-screen flex flex-col items-center">
             <div className="flex-1 w-full flex flex-col items-center">
-              <nav className="w-full z-50 shadow-lg bg-md-purple flex justify-center border-b border-b-foreground/10 h-16">
+              <nav className="items-center py-9 w-full z-50 shadow-lg bg-md-purple flex justify-center border-b border-b-foreground/10 h-16">
                 <div className="w-full max-w-full flex justify-between items-center p-3 px-5 text-sm">
                   <div className="flex gap-5 items-center font-semibold">
                     <Link href="/">

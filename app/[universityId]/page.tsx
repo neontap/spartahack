@@ -402,7 +402,7 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
       </div>
 
       {/* Search Section */}
-      <div className="bg-white shadow-md py-8 mb-8">
+      <div className="bg-white shadow-md py-8">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto space-y-6">
             <h1 className="text-3xl font-bold text-center text-gray-900">
@@ -485,7 +485,7 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
       )}
 
       {/* Course List */}
-      <div className="container mx-auto px-4 mb-8">
+      <div className="container mx-auto px-4 py-8">
         {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
@@ -508,27 +508,30 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
 
         {/* Pagination */}
         {courses.length > 0 && (
-            <div className="flex justify-center items-center gap-4 mt-8">
-              <Button
-                  onClick={handlePreviousPage}
-                  disabled={page === 1 || loading}
-                  variant="outline"
-              className="gap-2"
-            >
-              Previous
-            </Button>
-            <span className="text-sm font-medium">
-              Page {page}
-            </span>
-            <Button
-              onClick={handleNextPage}
-              disabled={courses.length < pageSize || loading}
-              variant="outline"
-              className="gap-2"
-            >
-              Next
-            </Button>
-          </div>
+            <div className="pt-8">
+              <div className="flex justify-center items-center gap-4">
+                <Button
+                    onClick={handlePreviousPage}
+                    disabled={page === 1 || loading}
+                    variant="outline"
+                    className="gap-2"
+                >
+                  Previous
+                </Button>
+                <span className="text-sm font-medium">
+                  Page {page}
+                </span>
+                <Button
+                    onClick={handleNextPage}
+                    disabled={courses.length < pageSize || loading}
+                    variant="outline"
+                    className="gap-2"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+
         )}
       </div>
     </main>
