@@ -1,5 +1,6 @@
-"use client"
+"use client";
 import React, { useState, useEffect } from "react";
+import Link from "next/link"
 import { useParams } from "next/navigation";
 import {
   Select,
@@ -11,12 +12,10 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-// import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { createBrowserClient } from "@supabase/ssr";
-
-import { Slider } from '@mui/material';
+import { Slider } from "@mui/material";
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,34 +24,40 @@ const supabase = createBrowserClient(
 
 const CourseReviewForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     professor: "",
     semester: "",
-    courseRating: 3,
-    difficulty: 3,
+    courseRating: 3, // How useful/relevant did you find this course?
+    studyMaterialUsefulness: 3, // How useful was the course material?
+    examDifficulty: 3, // How difficult are the exams?
+    assignmentDifficulty: 3, // How difficult are the assignments?
     hoursPerWeek: 6,
+    gradingFairness: "", // Enum: Very Unfair, Unfair, Neutral, Fair, Very Fair
     grade: null,
-    format: "",
     attendance: "",
     recommend: "",
     textbook: "",
     review: "",
     advice: ""
   });
-  const [user, setUser] = useState(null);
-  const [submissionError, setSubmissionError] = useState(null);
-  const [submissionSuccess, setSubmissionSuccess] = useState(null);
-  const [course, setCourse] = useState(null);
+  const [user, setUser] = useState<any>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [submissionSuccess, setSubmissionSuccess] = useState<string | null>(null);
+  const [course, setCourse] = useState<any>(null);
 
   const params = useParams();
-  const courseId = typeof params.courseId === "string" ? parseInt(params.courseId) : null;
+  const courseId =
+    typeof params.courseId === "string" ? parseInt(params.courseId) : null;
 
+  // Fetch course details
   useEffect(() => {
     if (!courseId) return;
     const fetchCourseDetails = async () => {
       const { data, error } = await supabase
         .from("courses")
-        .select(`
+        .select(
+          `
           id,
           title,
           course_professors (
@@ -61,7 +66,8 @@ const CourseReviewForm = () => {
               full_name
             )
           )
-        `)
+        `
+        )
         .eq("id", courseId)
         .single();
       if (error) {
@@ -73,13 +79,15 @@ const CourseReviewForm = () => {
     fetchCourseDetails();
   }, [courseId]);
 
+  // Check auth session
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setLoading(false);
     });
   }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!courseId) {
@@ -97,14 +105,17 @@ const CourseReviewForm = () => {
       course_id: courseId,
       user_id: user.id,
       rating: formData.courseRating,
-      difficulty_rating: formData.difficulty,
-      comment: formData.review,
-      advice: formData.advice,
+      study_material_usefulness: formData.studyMaterialUsefulness,
+      exam_difficulty: formData.examDifficulty,
+      assignment_difficulty: formData.assignmentDifficulty,
+      hours_per_week: formData.hoursPerWeek,
+      grading_fairness: formData.gradingFairness,
+      grade: formData.grade,
       mandatory_attendance: formData.attendance === "yes",
       recommend_class: formData.recommend === "yes",
       textbook_required: formData.textbook === "yes",
-      class_format: formData.format,
-      grade: formData.grade
+      comment: formData.review,
+      advice: formData.advice
     });
 
     if (error) {
@@ -117,10 +128,12 @@ const CourseReviewForm = () => {
         professor: "",
         semester: "",
         courseRating: 3,
-        difficulty: 3,
+        studyMaterialUsefulness: 3,
+        examDifficulty: 3,
+        assignmentDifficulty: 3,
         hoursPerWeek: 6,
+        gradingFairness: "",
         grade: null,
-        format: "",
         attendance: "",
         recommend: "",
         textbook: "",
@@ -135,15 +148,59 @@ const CourseReviewForm = () => {
       case 1:
         return formData.professor && formData.semester;
       case 2:
-        return formData.courseRating && formData.difficulty && formData.hoursPerWeek;
+        return (
+          formData.courseRating !== null &&
+          formData.studyMaterialUsefulness !== null &&
+          formData.examDifficulty !== null &&
+          formData.assignmentDifficulty !== null &&
+          formData.hoursPerWeek !== null
+        );
       case 3:
-        return formData.grade !== null && formData.format && formData.attendance;
+        return formData.grade !== null && formData.attendance && formData.gradingFairness;
       case 4:
         return formData.recommend && formData.textbook;
       case 5:
         return formData.review.length >= 10 && formData.advice.length >= 10;
       default:
         return false;
+    }
+  };
+
+  const sliderSx = {
+    "& .MuiSlider-track": {
+      backgroundColor: "#4F3078"
+    },
+    "& .MuiSlider-rail": {
+      backgroundColor: "#e2e8f0"
+    },
+    "& .MuiSlider-thumb": {
+      backgroundColor: "#fff",
+      border: "2px solid #4F3078",
+      "&:hover": {
+        boxShadow: "none"
+      },
+      "&:focus, &.Mui-focusVisible": {
+        boxShadow: "0 0 0 8px rgba(79, 48, 120, 0.16)",
+        outline: "none"
+      },
+      "&.Mui-active": {
+        boxShadow: "0 0 0 14px rgba(79, 48, 120, 0.16)"
+      }
+    },
+    "& .MuiSlider-mark": {
+      backgroundColor: "#4F3078",
+      height: "8px",
+      width: "2px",
+      "&.MuiSlider-markActive": {
+        backgroundColor: "#4F3078"
+      }
+    },
+    "& .MuiSlider-markLabel": {
+      color: "#666",
+      fontSize: "0.875rem"
+    },
+    "& .MuiSlider-valueLabel": {
+      backgroundColor: "#4F3078"
     }
   };
 
@@ -158,13 +215,15 @@ const CourseReviewForm = () => {
                 <Label>Select your professor</Label>
                 <Select
                   value={formData.professor}
-                  onValueChange={(value) => setFormData({ ...formData, professor: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, professor: value })
+                  }
                 >
                   <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="Select your Professor" />
                   </SelectTrigger>
                   <SelectContent>
-                    {course?.course_professors?.map((cp, index) => (
+                    {course?.course_professors?.map((cp: any, index: number) => (
                       <SelectItem key={cp.professors.id || index} value={cp.professors.full_name}>
                         {cp.professors.full_name}
                       </SelectItem>
@@ -177,7 +236,9 @@ const CourseReviewForm = () => {
                 <Label>Select your semester</Label>
                 <Select
                   value={formData.semester}
-                  onValueChange={(value) => setFormData({ ...formData, semester: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, semester: value })
+                  }
                 >
                   <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="Select your semester" />
@@ -186,6 +247,8 @@ const CourseReviewForm = () => {
                     <SelectItem value="fall2023">Fall 2023</SelectItem>
                     <SelectItem value="spring2024">Spring 2024</SelectItem>
                     <SelectItem value="summer2024">Summer 2024</SelectItem>
+                    <SelectItem value="fall2024">Fall 2024</SelectItem>
+                    <SelectItem value="spring2025">Spring 2025</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -197,187 +260,89 @@ const CourseReviewForm = () => {
         return (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-purple-800">Course Experience</h2>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label>Rate the course</Label>
+            <div className="space-y-4">
+              <div className="space-y-2 py-2">
+                <Label>How useful/relevant did you find this course?</Label>
                 <Slider
-                    // Ensure value is never undefined with default value
-                    value={formData.courseRating ?? 1}
-                    onChange={(_, value) => setFormData({ ...formData, courseRating: value as number })}
-                    min={1}
-                    max={5}
-                    step={1}
-                    marks={[
-                      { value: 1, label: '1' },
-                      { value: 2, label: '2' },
-                      { value: 3, label: '3' },
-                      { value: 4, label: '4' },
-                      { value: 5, label: '5' }
-                    ]}
-                    sx={{
-                      '& .MuiSlider-track': {
-                        backgroundColor: '#4F3078',
-                        color: '#4F3078'
-                      },
-                      '& .MuiSlider-rail': {
-                        backgroundColor: '#e2e8f0',
-                      },
-                      '& .MuiSlider-thumb': {
-                        backgroundColor: '#fff',
-                        border: '2px solid #4F3078',
-                        '&:hover': {
-                          boxShadow: 'none',
-                        },
-                        '&:focus, &.Mui-focusVisible': {
-                          boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
-                          outline: 'none'
-                        },
-                        '&.Mui-active': {
-                          boxShadow: '0 0 0 14px rgba(79, 48, 120, 0.16)'
-                        }
-                      },
-                      '& .MuiSlider-mark': {
-                        backgroundColor: '#4F3078',
-                        height: '8px',
-                        width: '2px',
-                        '&.MuiSlider-markActive': {
-                          backgroundColor: '#4F3078',
-                        }
-                      },
-                      '& .MuiSlider-markLabel': {
-                        color: '#666',
-                        fontSize: '0.875rem'
-                      },
-                      '& .MuiSlider-valueLabel': {
-                        backgroundColor: '#4F3078',
-                      },
-                      // Override focus states
-                      '&.Mui-focused .MuiSlider-thumb': {
-                        boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
-                      }
-                    }}
+                  value={formData.courseRating}
+                  onChange={(_, value) =>
+                    setFormData({ ...formData, courseRating: value as number })
+                  }
+                  min={1}
+                  max={5}
+                  step={1}
+                  marks={[
+                    { value: 1, label: "1" },
+                    { value: 2, label: "2" },
+                    { value: 3, label: "3" },
+                    { value: 4, label: "4" },
+                    { value: 5, label: "5" }
+                  ]}
+                  sx={sliderSx}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>How difficult was the course?</Label>
+
+              <div className="space-y-2 py-4">
+                <Label>How difficult are the assessments?</Label>
                 <Slider
-                    // Ensure value is never undefined with default value
-                    value={formData.difficulty ?? 1}
-                    onChange={(_, value) => setFormData({ ...formData, difficulty: value as number })}
-                    min={1}
-                    max={5}
-                    step={1}
-                    marks={[
-                      { value: 1, label: '1' },
-                      { value: 2, label: '2' },
-                      { value: 3, label: '3' },
-                      { value: 4, label: '4' },
-                      { value: 5, label: '5' }
-                    ]}
-                    sx={{
-                      '& .MuiSlider-track': {
-                        backgroundColor: '#4F3078',
-                        color: '#4F3078'
-                      },
-                      '& .MuiSlider-rail': {
-                        backgroundColor: '#e2e8f0',
-                      },
-                      '& .MuiSlider-thumb': {
-                        backgroundColor: '#fff',
-                        border: '2px solid #4F3078',
-                        '&:hover': {
-                          boxShadow: 'none',
-                        },
-                        '&:focus, &.Mui-focusVisible': {
-                          boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
-                          outline: 'none'
-                        },
-                        '&.Mui-active': {
-                          boxShadow: '0 0 0 14px rgba(79, 48, 120, 0.16)'
-                        }
-                      },
-                      '& .MuiSlider-mark': {
-                        backgroundColor: '#4F3078',
-                        height: '8px',
-                        width: '2px',
-                        '&.MuiSlider-markActive': {
-                          backgroundColor: '#4F3078',
-                        }
-                      },
-                      '& .MuiSlider-markLabel': {
-                        color: '#666',
-                        fontSize: '0.875rem'
-                      },
-                      '& .MuiSlider-valueLabel': {
-                        backgroundColor: '#4F3078',
-                      },
-                      // Override focus states
-                      '&.Mui-focused .MuiSlider-thumb': {
-                        boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
-                      }
-                    }}
+                  value={formData.assignmentDifficulty}
+                  onChange={(_, value) =>
+                    setFormData({ ...formData, assignmentDifficulty: value as number })
+                  }
+                  min={1}
+                  max={5}
+                  step={1}
+                  marks={[
+                    { value: 1, label: "1" },
+                    { value: 2, label: "2" },
+                    { value: 3, label: "3" },
+                    { value: 4, label: "4" },
+                    { value: 5, label: "5" }
+                  ]}
+                  sx={sliderSx}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label>Hours spent on work outside of class</Label>
                 <Slider
-                    // Ensure value is never undefined with default value
-                    value={formData.hoursPerWeek ?? 0}
-                    onChange={(_, value) => setFormData({ ...formData, hoursPerWeek: value as number })}
-                    min={4}
-                    max={20}
-                    step={4}
-                    marks={[
-                      { value: 4, label: '0-4' },
-                      { value: 8, label: '4-8' },
-                      { value: 12, label: '8-12' },
-                      { value: 16, label: '12-16' },
-                      { value: 20, label: '16-20' }
-                    ]}
-                    sx={{
-                      '& .MuiSlider-track': {
-                        backgroundColor: '#4F3078',
-                        color: '#4F3078'
-                      },
-                      '& .MuiSlider-rail': {
-                        backgroundColor: '#e2e8f0',
-                      },
-                      '& .MuiSlider-thumb': {
-                        backgroundColor: '#fff',
-                        border: '2px solid #4F3078',
-                        '&:hover': {
-                          boxShadow: 'none',
-                        },
-                        '&:focus, &.Mui-focusVisible': {
-                          boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
-                          outline: 'none'
-                        },
-                        '&.Mui-active': {
-                          boxShadow: '0 0 0 14px rgba(79, 48, 120, 0.16)'
-                        }
-                      },
-                      '& .MuiSlider-mark': {
-                        backgroundColor: '#4F3078',
-                        height: '8px',
-                        width: '2px',
-                        '&.MuiSlider-markActive': {
-                          backgroundColor: '#4F3078',
-                        }
-                      },
-                      '& .MuiSlider-markLabel': {
-                        color: '#666',
-                        fontSize: '0.875rem'
-                      },
-                      '& .MuiSlider-valueLabel': {
-                        backgroundColor: '#4F3078',
-                      },
-                      // Override focus states
-                      '&.Mui-focused .MuiSlider-thumb': {
-                        boxShadow: '0 0 0 8px rgba(79, 48, 120, 0.16)',
-                      }
-                    }}
+                  value={formData.hoursPerWeek}
+                  onChange={(_, value) =>
+                    setFormData({ ...formData, hoursPerWeek: value as number })
+                  }
+                  min={4}
+                  max={20}
+                  step={4}
+                  marks={[
+                    { value: 4, label: "0-4" },
+                    { value: 8, label: "4-8" },
+                    { value: 12, label: "8-12" },
+                    { value: 16, label: "12-16" },
+                    { value: 20, label: "16-20" }
+                  ]}
+                  sx={sliderSx}
+                />
+              </div>
+
+              <div className="space-y-2 py-4">
+                <Label>How useful was the course material?</Label>
+                <Slider
+                  value={formData.studyMaterialUsefulness}
+                  onChange={(_, value) =>
+                    setFormData({ ...formData, studyMaterialUsefulness: value as number })
+                  }
+                  min={1}
+                  max={5}
+                  step={1}
+                  marks={[
+                    { value: 1, label: "1" },
+                    { value: 2, label: "2" },
+                    { value: 3, label: "3" },
+                    { value: 4, label: "4" },
+                    { value: 5, label: "5" }
+                  ]}
+                  sx={sliderSx}
                 />
               </div>
             </div>
@@ -393,7 +358,9 @@ const CourseReviewForm = () => {
                 <Label>Select the grade you received</Label>
                 <Select
                   value={formData.grade?.toString()}
-                  onValueChange={(value) => setFormData({ ...formData, grade: parseInt(value) })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, grade: parseFloat(value) })
+                  }
                 >
                   <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="Select your grade" />
@@ -409,28 +376,13 @@ const CourseReviewForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>What format did your class have?</Label>
-                <Select
-                  value={formData.format}
-                  onValueChange={(value) => setFormData({ ...formData, format: value })}
-                >
-                  <SelectTrigger className="w-full bg-white">
-                    <SelectValue placeholder="Select class format" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="In-person">In-person</SelectItem>
-                    <SelectItem value="Online">Online</SelectItem>
-                    <SelectItem value="Hybrid">Hybrid</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
                 <Label>Was attendance mandatory?</Label>
                 <RadioGroup
                   value={formData.attendance}
                   className="flex gap-4"
-                  onValueChange={(value) => setFormData({ ...formData, attendance: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, attendance: value })
+                  }
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="yes" id="yes-attendance" />
@@ -439,6 +391,38 @@ const CourseReviewForm = () => {
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="no" id="no-attendance" />
                     <Label htmlFor="no-attendance">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className="space-y-2">
+                <Label>How fair is the grading system?</Label>
+                <RadioGroup
+                  value={formData.gradingFairness}
+                  className="flex gap-4"
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, gradingFairness: value })
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Very Unfair" id="very-unfair" />
+                    <Label htmlFor="very-unfair">Very Unfair</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Unfair" id="unfair" />
+                    <Label htmlFor="unfair">Unfair</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Neutral" id="neutral" />
+                    <Label htmlFor="neutral">Neutral</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Fair" id="fair" />
+                    <Label htmlFor="fair">Fair</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Very Fair" id="very-fair" />
+                    <Label htmlFor="very-fair">Very Fair</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -456,7 +440,9 @@ const CourseReviewForm = () => {
                 <RadioGroup
                   value={formData.recommend}
                   className="flex gap-4"
-                  onValueChange={(value) => setFormData({ ...formData, recommend: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, recommend: value })
+                  }
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="yes" id="yes-recommend" />
@@ -470,11 +456,13 @@ const CourseReviewForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Was there a textbook requirement?</Label>
+                <Label>Was there a paid homework/textbook access requirement?</Label>
                 <RadioGroup
                   value={formData.textbook}
                   className="flex gap-4"
-                  onValueChange={(value) => setFormData({ ...formData, textbook: value })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, textbook: value })
+                  }
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="yes" id="yes-textbook" />
@@ -501,7 +489,9 @@ const CourseReviewForm = () => {
                   placeholder="Share your thoughts about the course (minimum 10 characters)"
                   className="min-h-32 bg-white"
                   value={formData.review}
-                  onChange={(e) => setFormData({ ...formData, review: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, review: e.target.value })
+                  }
                 />
               </div>
 
@@ -511,7 +501,9 @@ const CourseReviewForm = () => {
                   placeholder="What advice can you give to future students? (minimum 10 characters)"
                   className="min-h-24 bg-white"
                   value={formData.advice}
-                  onChange={(e) => setFormData({ ...formData, advice: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, advice: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -522,6 +514,18 @@ const CourseReviewForm = () => {
         return null;
     }
   };
+
+  // Only render the form if not loading and the user is logged in
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>You must be logged in to submit a review. Please <Link className="font-bold underline" href="/sign-in"> sign in</Link>.</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -544,7 +548,7 @@ const CourseReviewForm = () => {
               <div
                 key={step}
                 className={`w-1/5 h-2 rounded-full mx-1 ${
-                  step <= currentStep ? 'bg-purple-600' : 'bg-gray-200'
+                  step <= currentStep ? "bg-purple-600" : "bg-gray-200"
                 }`}
               />
             ))}
