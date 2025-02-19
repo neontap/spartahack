@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ThumbsUp, ThumbsDown, Clock, Star, Dumbbell, MessageCircle } from 'lucide-react';
-import CourseAssistant from '@/components/CourseAssistant';
+// import CourseAssistant from '@/components/CourseAssistant';
 import {SupabaseClient} from "@supabase/supabase-js";
 
 // Types remain similar but with added fields
@@ -320,7 +320,7 @@ function CourseDetailPage() {
           </TabsContent>
 
           <TabsContent value="advice">
-            <CourseAssistant courseId={courseId} />
+            {/*<CourseAssistant courseId={courseId} />*/}
           </TabsContent>
         </Tabs>
       </div>
