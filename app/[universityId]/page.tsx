@@ -312,11 +312,7 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
         );
       }
 
-      processedData = _.orderBy(
-          processedData,
-          [sortBy],
-          [sortBy === "rating" ? "desc" : "desc"]
-      );
+      processedData = _.orderBy(processedData, ['review_count'], ['desc']);
 
       setCourses(processedData);
     } catch (error) {
