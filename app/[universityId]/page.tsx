@@ -48,15 +48,17 @@ type Course = {
     name: string;
   }[];
   course_professors: {
-    professors: {
-      full_name: any;
-    }[];
-  }[] | undefined;
+    professors: Professor[];
+  }[];
   reviews: {
     rating: number;
     is_deleted: boolean;
   }[];
 };
+
+interface Professor {
+  full_name: string;
+}
 
 type University = {
   id: number;
@@ -92,13 +94,13 @@ function CourseCardSkeleton() {
 }
 
 function CourseCard({ course }: { course: Course }) {
-  const instructors = course.course_professors?.map(({ professors: { full_name } }) => {
-    // split the full name into parts
-    const nameParts = full_name.split(' ');
+  const instructors = course.course_professors?.map(cp => {
+    const full_name = cp.professors['full_name'];
+    if (!full_name) return "Unknown Instructor";
 
-    // take first letter of first name and the last name
-    const firstInitial = nameParts[0][0];  // first letter of first name
-    const lastName = nameParts[nameParts.length - 1];  // last word as last name
+    const nameParts = full_name.split(' ');
+    const firstInitial = nameParts[0][0];
+    const lastName = nameParts[nameParts.length - 1];
 
     return `${firstInitial}. ${lastName}`;
   })
