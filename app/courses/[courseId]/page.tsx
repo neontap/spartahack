@@ -1,9 +1,8 @@
-"use client"
+"use client";
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
-import { createClient } from '@/utils/supabase/client';
 import {
   Select,
   SelectContent,
@@ -11,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
 import Link from "next/link";
 import {
   Card,
@@ -26,11 +24,20 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Clock, Star, Dumbbell, MessageCircle } from 'lucide-react';
-import CourseAssistant from '@/components/CourseAssistant';
-import {SupabaseClient} from "@supabase/supabase-js";
+import {
+  ThumbsUp,
+  ThumbsDown,
+  Clock,
+  Star,
+  Dumbbell,
+  MessageCircle,
+  BookOpen,
+} from "lucide-react";
+import CourseAssistant from "@/components/CourseAssistant";
+import { SupabaseClient } from "@supabase/supabase-js";
 
-// Types remain similar but with added fields
+// ----- Types -----
+// Updated review type to match desired fields
 type Course = {
   id: number;
   course_code: string;
@@ -38,45 +45,23 @@ type Course = {
   title: string;
   description?: string;
   historical_average_grade: number | null;
-  universities: {
-    name: string;
-  }[];
+  universities: { name: string }[];
   course_professors: {
-    professors: {
-      full_name: string;
-      id: number;
-    }[];
+    professors: { full_name: string; id: number }[];
   }[];
-};
-
-const supabase = createClient();
-
-// Helper functions for styling
-const getQualityColor = (rating: number) => {
-  if (rating >= 4) return 'bg-rating-green text-white';
-  if (rating >= 3) return 'bg-rating-yellow text-white';
-  return 'bg-rating-red text-white';
-};
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
 };
 
 type Review = {
   id: number;
   course_id: number;
   rating: number;
-  difficulty_rating: number;
-  workload_hours: number;
-  grade_received: string;
-  attendance_mandatory: boolean;
-  textbook_required: boolean;
+  study_material_usefulness: number;
+  assignment_difficulty: number;
+  hours_per_week: number;
+  grading_fairness: string;
   class_format: string;
-  would_recommend: boolean;
+  advice: string;
+  grade_received: string;
   comment: string;
   created_at: string;
   helpful_count: number;
@@ -91,13 +76,24 @@ const SEMESTERS = [
   "Spring 2024",
   "Fall 2023",
   "Summer 2023",
-  "Spring 2023"
+  "Spring 2023",
 ];
 
-function CourseDetailPage() {
+// ----- Supabase Client -----
+const supabase = createClient();
 
+// ----- Helper Functions -----
+const getQualityColor = (rating: number) => {
+  if (rating >= 4) return "bg-rating-green text-white";
+  if (rating >= 3) return "bg-rating-yellow text-white";
+  return "bg-rating-red text-white";
+};
+
+// ----- Main Component -----
+function CourseDetailPage() {
   const params = useParams();
-  const courseId = typeof params.courseId === "string" ? parseInt(params.courseId) : null;
+  const courseId =
+    typeof params.courseId === "string" ? parseInt(params.courseId) : null;
 
   const [course, setCourse] = useState<Course | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -107,23 +103,22 @@ function CourseDetailPage() {
   const [activeTab, setActiveTab] = useState("reviews");
   const [statistics, setStatistics] = useState({
     averageRating: 0,
-    averageDifficulty: 0,
+    averageAssignmentDifficulty: 0,
+    averageStudyMaterialUsefulness: 0,
     averageWorkload: 0,
-    recommendationRate: 0,
-    totalReviews: 0
+    totalReviews: 0,
   });
 
-
-  // Fetch course and review data
+  // Fetch course details and reviews
   useEffect(() => {
     const fetchData = async () => {
       if (!courseId) return;
-
       try {
         // Fetch course details
         const { data: courseData, error: courseError } = await supabase
           .from("courses")
-          .select(`
+          .select(
+            `
             id,
             course_code,
             subject_code,
@@ -134,48 +129,54 @@ function CourseDetailPage() {
             course_professors ( 
               professors ( id, full_name )
             )
-          `)
+          `
+          )
           .eq("id", courseId)
           .single();
-
         if (courseError) throw courseError;
         setCourse(courseData as Course);
 
-        // Fetch reviews
+        // Fetch reviews for the course
         const { data: reviewData, error: reviewError } = await supabase
           .from("course_reviews")
           .select("*")
           .eq("course_id", courseId)
           .order("created_at", { ascending: false });
-
         if (reviewError) throw reviewError;
-
         const validReviews = reviewData as Review[];
         setReviews(validReviews);
 
-        // Calculate statistics from valid reviews
+        // Calculate statistics based on reviews
         if (validReviews && validReviews.length > 0) {
-          const stats = validReviews.reduce((acc, review) => ({
-            averageRating: acc.averageRating + (review.rating || 0),
-            averageDifficulty: acc.averageDifficulty + (review.difficulty_rating || 0),
-            averageWorkload: acc.averageWorkload + (review.workload_hours || 0),
-            recommendationRate: acc.recommendationRate + (review.would_recommend ? 1 : 0),
-            totalReviews: acc.totalReviews + 1
-          }), {
-            averageRating: 0,
-            averageDifficulty: 0,
-            averageWorkload: 0,
-            recommendationRate: 0,
-            totalReviews: 0
-          });
-
-          const totalReviews = stats.totalReviews || 1; // Prevent division by zero
+          const stats = validReviews.reduce(
+            (acc, review) => ({
+              averageRating: acc.averageRating + (review.rating || 0),
+              averageAssignmentDifficulty:
+                acc.averageAssignmentDifficulty +
+                (review.assignment_difficulty || 0),
+              averageStudyMaterialUsefulness:
+                acc.averageStudyMaterialUsefulness +
+                (review.study_material_usefulness || 0),
+              averageWorkload: acc.averageWorkload + (review.hours_per_week || 0),
+              totalReviews: acc.totalReviews + 1,
+            }),
+            {
+              averageRating: 0,
+              averageAssignmentDifficulty: 0,
+              averageStudyMaterialUsefulness: 0,
+              averageWorkload: 0,
+              totalReviews: 0,
+            }
+          );
+          const total = stats.totalReviews || 1;
           setStatistics({
-            averageRating: Number((stats.averageRating / totalReviews).toFixed(1)) || 0,
-            averageDifficulty: Number((stats.averageDifficulty / totalReviews).toFixed(1)) || 0,
-            averageWorkload: Number((stats.averageWorkload / totalReviews).toFixed(1)) || 0,
-            recommendationRate: Number(((stats.recommendationRate / totalReviews) * 100).toFixed(0)) || 0,
-            totalReviews: stats.totalReviews
+            averageRating: Number((stats.averageRating / total).toFixed(1)) || 0,
+            averageAssignmentDifficulty:
+              Number((stats.averageAssignmentDifficulty / total).toFixed(1)) || 0,
+            averageStudyMaterialUsefulness:
+              Number((stats.averageStudyMaterialUsefulness / total).toFixed(1)) || 0,
+            averageWorkload: Number((stats.averageWorkload / total).toFixed(1)) || 0,
+            totalReviews: stats.totalReviews,
           });
         }
       } catch (error) {
@@ -220,14 +221,20 @@ function CourseDetailPage() {
               <h2 className="text-xl text-gray-600 mb-4">{course.title}</h2>
 
               <div className="flex flex-wrap gap-4 mb-6">
-                <Select value={selectedProfessor} onValueChange={setSelectedProfessor}>
+                <Select
+                  value={selectedProfessor}
+                  onValueChange={setSelectedProfessor}
+                >
                   <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Select Professor" />
                   </SelectTrigger>
                   <SelectContent>
                     {course.course_professors?.flatMap((cp) => {
-                      // Check if cp.professors is an array. If not, wrap it in an array.
-                      const profArray = Array.isArray(cp.professors) ? cp.professors : cp.professors ? [cp.professors] : [];
+                      const profArray = Array.isArray(cp.professors)
+                        ? cp.professors
+                        : cp.professors
+                        ? [cp.professors]
+                        : [];
                       return profArray.map((prof) => (
                         <SelectItem key={prof.id} value={prof.full_name}>
                           {prof.full_name}
@@ -237,7 +244,10 @@ function CourseDetailPage() {
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedSemester} onValueChange={setSelectedSemester}>
+                <Select
+                  value={selectedSemester}
+                  onValueChange={setSelectedSemester}
+                >
                   <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Select Semester" />
                   </SelectTrigger>
@@ -262,8 +272,14 @@ function CourseDetailPage() {
               />
               <StatCard
                 icon={<Dumbbell className="h-5 w-5 text-rating-red" />}
-                value={statistics.averageDifficulty}
-                label="Difficulty"
+                value={statistics.averageAssignmentDifficulty}
+                label="Assignment Diff."
+                sublabel="out of 5"
+              />
+              <StatCard
+                icon={<BookOpen className="h-5 w-5 text-rating-green" />}
+                value={statistics.averageStudyMaterialUsefulness}
+                label="Study Material"
                 sublabel="out of 5"
               />
               <StatCard
@@ -272,13 +288,6 @@ function CourseDetailPage() {
                 label="Weekly Hours"
                 sublabel="average workload"
               />
-              <StatCard
-                icon={<ThumbsUp className="h-5 w-5 text-rating-green" />}
-                value={statistics.recommendationRate}
-                label="Would Take Again"
-                sublabel="% of students"
-                isPercentage
-              />
             </div>
           </div>
         </div>
@@ -286,7 +295,11 @@ function CourseDetailPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="reviews" onValueChange={setActiveTab} className="space-y-6">
+        <Tabs
+          defaultValue="reviews"
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           <TabsList className="grid w-full md:w-[400px] grid-cols-2">
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
             <TabsTrigger value="advice">
@@ -305,14 +318,20 @@ function CourseDetailPage() {
 
             <div className="space-y-4">
               {reviews.map((review) => (
-                <ReviewCard key={review.id} review={review} professors={course.course_professors}
-                supabase={supabase}/>
+                <ReviewCard
+                  key={review.id}
+                  review={review}
+                  professors={course.course_professors}
+                  supabase={supabase}
+                />
               ))}
               {reviews.length === 0 && (
                 <Card>
                   <CardContent className="py-8 text-center text-gray-500">
                     <MessageCircle className="h-12 w-12 mx-auto mb-4" />
-                    <p className="text-lg">No reviews yet. Be the first to review!</p>
+                    <p className="text-lg">
+                      No reviews yet. Be the first to review!
+                    </p>
                   </CardContent>
                 </Card>
               )}
@@ -328,10 +347,25 @@ function CourseDetailPage() {
   );
 }
 
-// Helper Components
-function StatCard({ icon, value, label, sublabel, isPercentage = false }) {
-  const displayValue = isNaN(value) ? '0' : isPercentage ? `${value}%` : value;
-
+// ----- Helper Components -----
+function StatCard({
+  icon,
+  value,
+  label,
+  sublabel,
+  isPercentage = false,
+}: {
+  icon: React.ReactNode;
+  value: number;
+  label: string;
+  sublabel: string;
+  isPercentage?: boolean;
+}) {
+  const displayValue = isNaN(value)
+    ? "0"
+    : isPercentage
+    ? `${value}%`
+    : value;
   return (
     <Card className="p-4">
       <div className="flex items-center gap-2 mb-2">
@@ -346,56 +380,60 @@ function StatCard({ icon, value, label, sublabel, isPercentage = false }) {
   );
 }
 
-function ReviewCard({review, professors, supabase}) {
-
- // Flatten the nested array of professor objects
-  const allProfessors = professors.flatMap(cp => cp.professors);
-  // Find the matching professor by ID
-  const professorObj = allProfessors.find(prof => prof.id === review.professor_id);
-  const professorName = professors[0].professors.full_name;
-
-  const title = review.title || 'Title';
+function ReviewCard({
+  review,
+  professors,
+  supabase,
+}: {
+  review: Review;
+  professors: { professors: { full_name: string; id: number }[] }[];
+  supabase: SupabaseClient;
+}) {
+  // Flatten professor arrays and look up the professor using review.professor_id
+  const allProfessors = professors.flatMap((cp) => cp.professors);
+  const professorObj = allProfessors.find(
+    (prof) => prof.id === review.professor_id
+  );
+  const professorName = professorObj ? professorObj.full_name : "Not Specified";
 
   const [voteCount, setVoteCount] = useState({
     likes: review.helpful_count || 0,
-    dislikes: review.unhelpful_count || 0
+    dislikes: review.unhelpful_count || 0,
   });
   const [userVote, setUserVote] = useState<number | null>(null);
 
   const loadUserVote = async () => {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    // console.log('Session check:', { session, sessionError });
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session?.user) return;
 
     const { data, error } = await supabase
-        .from('review_votes')
-        .select('vote')
-        .eq('review_id', review.id)
-        .eq('user_id', session.user.id)
+      .from("review_votes")
+      .select("vote")
+      .eq("review_id", review.id)
+      .eq("user_id", session.user.id);
     if (error) {
-      console.log('Error loading user vote:', error);
+      console.log("Error loading user vote:", error);
       return;
     }
     if (data && data.length === 1) {
       setUserVote(data[0].vote);
-    }
-    else{
+    } else {
       setUserVote(null);
     }
 
     const { data: counts, error: countsError } = await supabase
-        .from('review_votes')
-        .select('vote')
-        .eq('review_id', review.id);
-
+      .from("review_votes")
+      .select("vote")
+      .eq("review_id", review.id);
     if (countsError) {
-      console.log('Error loading vote counts:', countsError);
+      console.log("Error loading vote counts:", countsError);
       return;
     }
-
     if (counts) {
-      const likes = counts.filter(v => v.vote === 1).length;
-      const dislikes = counts.filter(v => v.vote === -1).length;
+      const likes = counts.filter((v) => v.vote === 1).length;
+      const dislikes = counts.filter((v) => v.vote === -1).length;
       setVoteCount({ likes, dislikes });
     }
   };
@@ -404,160 +442,139 @@ function ReviewCard({review, professors, supabase}) {
     loadUserVote();
   }, [review.id]);
 
-
   const handleVote = async (newVote: number) => {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    // console.log('Session check:', { session, sessionError });
-    if (!session?.user) return;  // early return if no session or user
-
-    if (!session?.user) {
-      alert('Please sign in to vote');
-      return;
-    }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user) return;
 
     try {
       if (userVote === newVote) {
-        // remove vote if clicking same button
+        // Remove vote if clicking the same button
         const { error } = await supabase
-            .from('review_votes')
-            .delete()
-            .match({
-              review_id: review.id,
-              user_id: session.user.id
-            });
-
+          .from("review_votes")
+          .delete()
+          .match({
+            review_id: review.id,
+            user_id: session.user.id,
+          });
         if (error) throw error;
         setUserVote(null);
-
       } else {
-        // insert or update vote
+        // Upsert vote
         const { error } = await supabase
-            .from('review_votes')
-            .upsert({
+          .from("review_votes")
+          .upsert(
+            {
               review_id: review.id,
               user_id: session.user.id,
-              vote: newVote
-            }, {
-              onConflict: 'review_id, user_id'
-            });
-
+              vote: newVote,
+            },
+            {
+              onConflict: "review_id, user_id",
+            }
+          );
         if (error) throw error;
         setUserVote(newVote);
       }
 
-      // get updated counts
+      // Refresh vote counts
       const { data: counts } = await supabase
-          .from('review_votes')
-          .select('vote')
-          .eq('review_id', review.id);
-
-      const likes = counts?.filter(v => v.vote === 1).length || 0;
-      const dislikes = counts?.filter(v => v.vote === -1).length || 0;
-
+        .from("review_votes")
+        .select("vote")
+        .eq("review_id", review.id);
+      const likes = counts?.filter((v) => v.vote === 1).length || 0;
+      const dislikes = counts?.filter((v) => v.vote === -1).length || 0;
       setVoteCount({ likes, dislikes });
-
     } catch (error) {
-      console.error('Error voting:', error);
-      alert('Failed to save vote');
+      console.error("Error voting:", error);
+      alert("Failed to save vote");
     }
   };
 
-
-
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow duration-200">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <span >{title}</span>
-              {review.semester?
-              <Badge variant="outline">{review.semester}</Badge>
-                  : null}
-            </CardTitle>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-semibold">{professorName}</h3>
+              {review.semester && (
+                <Badge variant="outline" className="text-xs">{review.semester}</Badge>
+              )}
+            </div>
+            {/* Overall Rating Badge */}
+            <div className="flex items-center gap-2">
+              <Badge className={`text-lg py-0.5 px-3 ${getQualityColor(review.rating)}`}>
+                {review.rating.toFixed(1)}
+              </Badge>
+              <span className="text-gray-500 text-xs">Overall Rating</span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
-              <button
-                  onClick={() => handleVote(1)}  // 1 for like
-                  className={`flex items-center gap-1 ${userVote === 1 ? 'text-grey-700' : ''}`}
-              >
-                <ThumbsUp className="h-4 w-4"/>
-                <span>{voteCount.likes}</span>
-              </button>
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                  onClick={() => handleVote(-1)}  // -1 for dislike
-                  className={`flex items-center gap-1 ${userVote === -1 ? 'text-grey-700' : ''}`}
-              >
-                <ThumbsDown className="h-4 w-4"/>
-                <span>{voteCount.dislikes}</span>
-              </button>
-            </div>
+            <button
+              onClick={() => handleVote(1)}
+              className={`flex items-center gap-1 hover:text-blue-600 transition-colors ${
+                userVote === 1 ? "text-blue-600" : "text-gray-500"
+              }`}
+            >
+              <ThumbsUp className="h-4 w-4" />
+              <span className="text-sm">{voteCount.likes}</span>
+            </button>
+            <button
+              onClick={() => handleVote(-1)}
+              className={`flex items-center gap-1 hover:text-red-600 transition-colors ${
+                userVote === -1 ? "text-red-600" : "text-gray-500"
+              }`}
+            >
+              <ThumbsDown className="h-4 w-4" />
+              <span className="text-sm">{voteCount.dislikes}</span>
+            </button>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <p className="text-gray-700 mb-4">{review.comment}</p>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-          <div>
-            <span className="text-gray-500">Quality:</span>
-            <Badge className={`ml-2 ${getQualityColor(review.rating)}`}>
-              {review.rating?.toFixed(1) || "N/A"}
+      <CardContent className="space-y-3">
+        {/* Main Comment */}
+        <p className="text-gray-700 text-sm">{review.comment}</p>
+
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500 text-sm">Difficulty:</span>
+            <Badge className={`text-sm ${getQualityColor(review.assignment_difficulty)}`}>
+              {review.assignment_difficulty.toFixed(1)}
             </Badge>
           </div>
-          <div>
-            <span className="text-gray-500">Difficulty:</span>
-            <Badge className={`ml-2 ${getQualityColor(review.difficulty_rating)}`}>
-              {review.difficulty_rating?.toFixed(1) || "N/A"}
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500 text-sm">Usefulness:</span>
+            <Badge className={`text-sm${getQualityColor(review.study_material_usefulness)}`}>
+              {review.study_material_usefulness.toFixed(1)}
             </Badge>
           </div>
-          <div>
-            <span className="text-gray-500">Workload:</span>
-            <span className="font-medium ml-2">
-              {review.workload_hours || 0}hrs/week
-            </span>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500 text-sm">Workload:</span>
+            <span className="text-sm">{review.hours_per_week} hrs/week</span>
           </div>
-          <div>
-            <span className="text-gray-500">Professor:</span>
-            <span className="font-medium ml-2">
-              {professorName || 'Not Specified'}
-            </span>
+          {/*           <div className="flex items-center gap-2">
+            <span className="text-gray-500 text-sm">Grade:</span>
+            <span className="text-sm">{review.grade_received || "N/A"}</span>
           </div>
-          <div>
-            <span className="text-gray-500">Grade:</span>
-            <span className="font-medium ml-2">{review.grade_received || "N/A"}</span>
+*/}
+
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500 text-sm">Fairness:</span>
+            <span className="text-sm">{review.grading_fairness || "N/A"}</span>
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-4 text-sm">
-          <Badge
-              variant="secondary"
-              className={review.textbook_required ? 'bg-rating-red-faint text-black' : ''}
-          >
-            {review.textbook_required ? "Textbook Required" : "No Textbook"}
-          </Badge>
-
-          <Badge
-              variant="secondary"
-              className={review.attendance_mandatory ? 'bg-rating-red-faint text-black' : ''}
-          >
-            {review.attendance_mandatory ? "Attendance Required" : "Attendance Optional"}
-          </Badge>
-
-          <Badge variant="outline">
-            {review.class_format || "Format Not Specified"}
-          </Badge>
-
-          <Badge
-              variant="secondary"
-              className={!review.would_recommend ? 'bg-rating-red-faint text-black' : ''}
-          >
-            {review.would_recommend ? "Would Take Again" : "Would Not Take Again"}
-          </Badge>
-        </div>
+        {/* Advice - Only shown if present */}
+        {review.advice && (
+          <div className="pt-1">
+            <span className="text-gray-500 text-sm">Advice:</span>
+            <p className="text-sm text-gray-700 mt-0.5">{review.advice}</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
