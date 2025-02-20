@@ -493,9 +493,6 @@ function ReviewCard({
       alert("Failed to save vote");
     }
   };
-  console.log(review);
-  console.log(review.textbook_required);
-  console.log(review.mandatory_attendance);
 
   return (
     <Card className="hover:shadow-md transition-shadow duration-200">
