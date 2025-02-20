@@ -336,7 +336,7 @@ const CourseReviewForm = () => {
               </div>
 
               <div className="space-y-2 py-4">
-                <Label>How useful was the course material?</Label>
+                <Label>How useful was the study material?</Label>
                 <Slider
                   value={formData.studyMaterialUsefulness}
                   onChange={(_, value) =>

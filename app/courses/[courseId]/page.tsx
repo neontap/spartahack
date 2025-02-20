@@ -85,7 +85,13 @@ const SEMESTERS = [
 const supabase = createClient();
 
 // ----- Helper Functions -----
-const getQualityColor = (rating: number) => {
+const getRatingColor = (rating: number) => {
+  if (rating >= 4) return "bg-rating-green text-white";
+  if (rating >= 3) return "bg-rating-yellow text-white";
+  return "bg-rating-red text-white";
+};
+
+const getDifficultyColor = (rating: number) => {
   if (rating >= 4) return "bg-rating-red text-white";
   if (rating >= 3) return "bg-rating-yellow text-white";
   return "bg-rating-green text-white";
@@ -507,7 +513,7 @@ function ReviewCard({
             </div>
             {/* Overall Rating Badge */}
             <div className="flex items-center gap-2">
-              <Badge className={`text-lg py-0.5 px-3 ${getQualityColor(review.rating)}`}>
+              <Badge className={`text-lg py-0.5 px-3 ${getRatingColor(review.rating)}`}>
                 {review.rating.toFixed(1)}
               </Badge>
               <span className="text-gray-500 text-xs">Overall Rating</span>
@@ -553,7 +559,7 @@ function ReviewCard({
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
           <div className="flex items-center gap-2">
             <span className="text-gray-500 text-sm">Difficulty:</span>
-            <Badge className={`text-sm ${getQualityColor(review.assignment_difficulty)}`}>
+            <Badge className={`text-sm ${getDifficultyColor(review.assignment_difficulty)}`}>
               {review.assignment_difficulty.toFixed(1)}
             </Badge>
           </div>
