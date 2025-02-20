@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link"
-import { useParams } from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -23,6 +23,7 @@ const supabase = createBrowserClient(
 );
 
 const CourseReviewForm = () => {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -123,25 +124,30 @@ const CourseReviewForm = () => {
       setSubmissionError("Failed to submit review. Please try again.");
     } else {
       setSubmissionSuccess("Review submitted successfully!");
-      setCurrentStep(1);
-      setFormData({
-        professor: "",
-        semester: "",
-        courseRating: 3,
-        studyMaterialUsefulness: 3,
-        examDifficulty: 3,
-        assignmentDifficulty: 3,
-        hoursPerWeek: 6,
-        gradingFairness: "",
-        grade: null,
-        attendance: "",
-        recommend: "",
-        textbook: "",
-        review: "",
-        advice: ""
-      });
+      router.push(`/courses/${courseId}`);
     }
   };
+
+  const renderCourseTitle = () => {
+    if (!course) {
+      return (
+          <div className="animate-pulse">
+            <div className="h-12 w-64 bg-gray-200 rounded"></div>
+          </div>
+      );
+    }
+    return (
+        <Link
+            href={`/courses/${course.id}`}
+            className="hover:opacity-80 transition-opacity"
+        >
+          <h1 className="text-5xl font-extrabold text-rbc-purple">
+            {course.title}
+          </h1>
+        </Link>
+
+    );
+    };
 
   const canProceedToNextStep = () => {
     switch (currentStep) {
@@ -536,15 +542,12 @@ const CourseReviewForm = () => {
       <div className="bg-md-purple w-full border-t-2 border-purple-600/20 py-8 rounded-b-2xl shadow-md">
         <div className="px-4 flex justify-between items-start">
           <div className="flex-1">
-            <h1 className="text-5xl font-extrabold text-rbc-purple">
-              {course ? course.title : "Loading Course..."}
-            </h1>
-            <p className="text-lg text-white font-semibold py-2">Write a Review</p>
+            {renderCourseTitle()}
           </div>
         </div>
       </div>
 
-      <div className="w-full max-w-2xl mx-auto p-4">
+      <div className="w-full max-w-2xl mx-auto p-4 py-16">
         {/* Progress Indicator */}
         <div className="mb-6">
           <div className="flex justify-between mb-2">
