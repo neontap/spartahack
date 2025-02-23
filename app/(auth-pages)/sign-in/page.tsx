@@ -20,11 +20,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
       </p>
 
       {/* Client component for Google sign in */}
-      <GoogleSignInButton />
 
-      <div className="flex items-center gap-2 my-4">
-        <span className="text-sm text-muted-foreground">OR</span>
-      </div>
 
       <div className="flex flex-col gap-2 [&>input]:mb-3">
         <Label htmlFor="email">Email</Label>
@@ -44,6 +40,10 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
         <SubmitButton pendingText="Signing In..." formAction={signInAction}>
           Log in
         </SubmitButton>
+        <div className="flex items-center gap-2 my-4">
+          <span className="text-sm text-muted-foreground">OR</span>
+        </div>
+        <GoogleSignInButton />
         <FormMessage message={searchParams} />
       </div>
     </form>

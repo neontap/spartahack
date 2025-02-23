@@ -2,6 +2,7 @@ import { signUpAction } from "@/app/actions";
 import { FormMessage, Message } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton"; // adjust path as needed
 import React from 'react'
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
@@ -43,6 +44,11 @@ export default async function Signup(props: {
           <SubmitButton formAction={signUpAction} pendingText="Signing up...">
             Sign up
           </SubmitButton>
+
+        <div className="flex items-center gap-2 my-4">
+          <span className="text-sm text-muted-foreground">OR</span>
+        </div>
+        <GoogleSignInButton />
           <FormMessage message={searchParams} />
         </div>
       </form>
