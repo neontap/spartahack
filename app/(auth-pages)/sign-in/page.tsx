@@ -4,9 +4,11 @@ import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton"; // adjust path as needed
 
 export default async function Login(props: { searchParams: Promise<Message> }) {
   const searchParams = await props.searchParams;
+
   return (
     <form className="flex flex-col min-w-64 max-w-64 mx-auto">
       <h1 className="text-2xl font-medium">Log in</h1>
@@ -16,15 +18,20 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
           Sign up
         </Link>
       </p>
-      <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
+
+      {/* Client component for Google sign in */}
+      <GoogleSignInButton />
+
+      <div className="flex items-center gap-2 my-4">
+        <span className="text-sm text-muted-foreground">OR</span>
+      </div>
+
+      <div className="flex flex-col gap-2 [&>input]:mb-3">
         <Label htmlFor="email">Email</Label>
         <Input name="email" placeholder="you@example.com" required />
         <div className="flex justify-between items-center">
           <Label htmlFor="password">Password</Label>
-          <Link
-            className="text-xs text-foreground underline"
-            href="/forgot-password"
-          >
+          <Link className="text-xs text-foreground underline" href="/forgot-password">
             Forgot Password?
           </Link>
         </div>
@@ -42,3 +49,4 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
     </form>
   );
 }
+
