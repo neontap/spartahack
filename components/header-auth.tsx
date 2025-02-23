@@ -18,6 +18,7 @@ export default async function HeaderAuth() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  console.log('user', user)
   if (!user) {
     return (
       <div className="flex gap-2">
@@ -40,7 +41,7 @@ export default async function HeaderAuth() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={avatarUrl} alt={email} />
+          {/* <AvatarImage src={avatarUrl} alt={email} />*/}
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
         </Button>

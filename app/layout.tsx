@@ -3,6 +3,9 @@ import HeaderAuth from "@/components/header-auth";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import Image from 'next/image';
 import { Gantari, Roboto } from "next/font/google";
+
+import { GoogleAnalytics } from '@next/third-parties/google';
+import Head from 'next/head';
 import EnvironmentBanner from "@/components/env-banner"
 import { ThemeProvider } from "next-themes";
 import {LoadingProvider} from "@/components/LoadingProvider";
@@ -39,7 +42,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={gantari.className} suppressHydrationWarning>
-
+      <head>
+        <script src="https://accounts.google.com/gsi/client" async></script>
+      </head>
       <body className="bg-background text-foreground">
       <EnvironmentBanner />
         <ThemeProvider
@@ -70,6 +75,8 @@ export default function RootLayout({
 
               <div className="flex flex-col w-full rounded-lg">
                 {children}
+
+          <GoogleAnalytics gaId="G-PW8BRX9CYT" />
               </div>
               <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
                 <p>
