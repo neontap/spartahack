@@ -2,6 +2,8 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 import Image from 'next/image';
+import Script from 'next/script'
+import Head from 'next/head';
 import { useRouter } from 'next/navigation';
 import { Command, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -104,6 +106,7 @@ export default function HomePage() {
   };
 
   return (
+
     <div className="min-h-screen relative bg-gradient-to-b from-white to-gray-50">
       <div className="h-[525px] absolute inset-0 z-0">
         <Image
@@ -224,6 +227,8 @@ export default function HomePage() {
           </div>
         </div>
       </main>
+
+
     </div>
   );
 }

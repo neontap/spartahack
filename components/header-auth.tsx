@@ -2,8 +2,7 @@ import { signOutAction } from "@/app/actions";
 import Link from "next/link";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-// import { createClient } from "@/utils/supabase/server";
-import {createClient} from "@supabase/supabase-js"
+import { createClient } from "@/utils/supabase/server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -14,14 +13,12 @@ import {
 import { User } from "lucide-react";
 
 export default async function HeaderAuth() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  console.log('user', user)
   if (!user) {
     return (
       <div className="flex gap-2">
@@ -44,7 +41,7 @@ export default async function HeaderAuth() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={avatarUrl} alt={email} />
+          {/* <AvatarImage src={avatarUrl} alt={email} />*/}
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
         </Button>
