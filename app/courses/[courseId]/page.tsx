@@ -217,6 +217,7 @@ function CourseDetailPage() {
             {/* Course Info */}
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
+
                 <h1 className="text-4xl font-bold text-gray-900">
                   {course.subject_code} {course.course_code}
                 </h1>
@@ -356,38 +357,79 @@ function CourseDetailPage() {
 }
 
 // ----- Helper Components -----
-function StatCard({
+
+const StatCard = ({
   icon,
   value,
   label,
   sublabel,
   isPercentage = false,
+  isPrimary = false,
+  accentColor = 'blue'
 }: {
   icon: React.ReactNode;
   value: number;
   label: string;
   sublabel: string;
   isPercentage?: boolean;
-}) {
+  isPrimary?: boolean;
+  accentColor?: string;
+}) => {
   const displayValue = isNaN(value)
     ? "0"
     : isPercentage
     ? `${value}%`
-    : value;
+    : value.toFixed(1);
+
+  const gradientMap = {
+    yellow: 'from-yellow-50 via-white to-yellow-50',
+    red: 'from-red-50 via-white to-red-50',
+    green: 'from-green-50 via-white to-green-50',
+    blue: 'from-blue-50 via-white to-blue-50'
+  };
+
+  const borderMap = {
+    yellow: 'group-hover:border-yellow-200',
+    red: 'group-hover:border-red-200',
+    green: 'group-hover:border-green-200',
+    blue: 'group-hover:border-blue-200'
+  };
+
   return (
-    <Card className="p-4">
-      <div className="flex items-center gap-2 mb-2">
-        {icon}
-        <span className="text-2xl font-bold">{displayValue}</span>
-      </div>
-      <div className="text-sm">
-        <div className="font-medium text-gray-900">{label}</div>
-        <div className="text-gray-500">{sublabel}</div>
+    <Card className={`relative overflow-hidden group hover:shadow-lg transition-all duration-300 border ${borderMap[accentColor]}`}>
+      <div className={`p-4 ${isPrimary ? 'p-6' : 'p-4'} bg-gradient-to-br ${gradientMap[accentColor]}`}>
+        {/* Decorative corner accent */}
+        <div className="absolute top-0 right-0 w-16 h-16 transform translate-x-8 -translate-y-8">
+          <div className="absolute inset-0 rotate-45 bg-gradient-to-br from-gray-100 to-transparent opacity-40" />
+        </div>
+        
+        {/* Background icon */}
+        <div className="absolute right-0 top-0 opacity-5 transform translate-x-1/4 -translate-y-1/4">
+          <div className={`text-gray-900 ${isPrimary ? 'w-32 h-32' : 'w-24 h-24'}`}>
+            {icon}
+          </div>
+        </div>
+        
+        {/* Content */}
+        <div className="relative">
+          {/* Icon and value */}
+          <div className="flex items-start gap-3">
+            <div className={`${isPrimary ? 'p-3' : 'p-2'} rounded-xl bg-white shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+              {icon}
+            </div>
+            <div className="space-y-0.5">
+              <span className={`font-bold text-gray-900 tracking-tight ${isPrimary ? 'text-4xl' : 'text-2xl'}`}>
+                {displayValue}
+              </span>
+              <div className={`font-medium text-gray-900 ${isPrimary ? 'text-base' : 'text-sm'}`}>{label}</div>
+              <div className="text-sm text-gray-500">{sublabel}</div>
+            </div>
+          </div>
+        </div>
       </div>
     </Card>
   );
-}
-
+};
 function ReviewCard({
   review,
   professors,
@@ -545,33 +587,35 @@ function ReviewCard({
       <CardContent className="space-y-3">
         {/* Main Comment */}
         <div className="pt-1">
-          <span className="text-gray-500 text-sm">Review:</span>
-          <p className="text-sm text-gray-700 mt-0.5">{review.comment}</p>
+          <p className="text-lg font-semibold text-gray-700 mt-0.5">{review.comment}</p>
         </div>
         {/* Advice - Only shown if present */}
         {review.advice && (
             <div className="pt-1">
               <span className="text-gray-500 text-sm">Advice:</span>
-              <p className="text-sm text-gray-700 mt-0.5">{review.advice}</p>
+              <p className="text-lg font-semibold text-gray-700 mt-0.5">{review.advice}</p>
             </div>
         )}
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
           <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-sm">Difficulty:</span>
             <Badge className={`text-sm ${getDifficultyColor(review.assignment_difficulty)}`}>
               {review.assignment_difficulty.toFixed(1)}
             </Badge>
+            <span className="text-gray-500 text-sm">Difficulty</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-sm">Relevance:</span>
             <Badge className="text-sm">
               {review.study_material_usefulness.toFixed(1)}
             </Badge>
+            <span className="text-gray-500 text-sm">Usefulness</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-sm">Workload:</span>
-            <span className="text-sm">{review.hours_per_week} hrs/week</span>
+
+            <Badge className={`text-sm ${getDifficultyColor(review.assignment_difficulty)}`}>
+            {review.hours_per_week} hrs/week
+            </Badge>
+            <span className="text-gray-500 text-sm">Workload</span>
           </div>
           {/*           <div className="flex items-center gap-2">
             <span className="text-gray-500 text-sm">Grade:</span>
