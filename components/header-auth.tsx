@@ -2,7 +2,8 @@ import { signOutAction } from "@/app/actions";
 import Link from "next/link";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { createClient } from "@/utils/supabase/server";
+// import { createClient } from "@/utils/supabase/server";
+import {createClient} from "@supabase/supabase-js"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -13,7 +14,10 @@ import {
 import { User } from "lucide-react";
 
 export default async function HeaderAuth() {
-  const supabase = await createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
   const {
     data: { user },
   } = await supabase.auth.getUser();
