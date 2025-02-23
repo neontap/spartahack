@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link"
-import {useParams, useRouter} from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -46,6 +46,7 @@ const CourseReviewForm = () => {
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState<string | null>(null);
   const [course, setCourse] = useState<any>(null);
+  const [professorId, setProfessorId] = useState<any>(null);
 
   const params = useParams();
   const courseId =
@@ -78,6 +79,7 @@ const CourseReviewForm = () => {
       }
     };
     fetchCourseDetails();
+    // setProfessorId(data.)
   }, [courseId]);
 
   // Check auth session
@@ -103,6 +105,7 @@ const CourseReviewForm = () => {
     }
 
     const { error } = await supabase.from("course_reviews").insert({
+      professor_id: parseInt(formData.professor),
       course_id: courseId,
       user_id: user.id,
       rating: formData.courseRating,
@@ -131,23 +134,23 @@ const CourseReviewForm = () => {
   const renderCourseTitle = () => {
     if (!course) {
       return (
-          <div className="animate-pulse">
-            <div className="h-12 w-64 bg-gray-200 rounded"></div>
-          </div>
+        <div className="animate-pulse">
+          <div className="h-12 w-64 bg-gray-200 rounded"></div>
+        </div>
       );
     }
     return (
-        <Link
-            href={`/courses/${course.id}`}
-            className="hover:opacity-80 transition-opacity"
-        >
-          <h1 className="text-5xl font-extrabold text-rbc-purple">
-            {course.title}
-          </h1>
-        </Link>
+      <Link
+        href={`/courses/${course.id}`}
+        className="hover:opacity-80 transition-opacity"
+      >
+        <h1 className="text-5xl font-extrabold text-rbc-purple">
+          {course.title}
+        </h1>
+      </Link>
 
     );
-    };
+  };
 
   const canProceedToNextStep = () => {
     switch (currentStep) {
@@ -223,24 +226,33 @@ const CourseReviewForm = () => {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Select your professor</Label>
-                <Select
-                  value={formData.professor}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, professor: value })
-                  }
-                >
-                  <SelectTrigger className="w-full bg-white">
-                    <SelectValue placeholder="Select your Professor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {course?.course_professors?.map((cp: any, index: number) => (
-                      <SelectItem key={cp.professors.id || index} value={cp.professors.full_name}>
-                        {cp.professors.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
+              <Select
+                value={formData.professor}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, professor: value })
+                }
+              >
+                <SelectTrigger className="w-full bg-white">
+                  <SelectValue>
+                    {formData.professor
+                      ? course.course_professors.find(
+                        (cp) => cp.professors.id.toString() === formData.professor
+                      )?.professors.full_name
+                      : "Select your Professor"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {course?.course_professors?.map((cp, index) => (
+                    <SelectItem
+                      key={cp.professors.id || index}
+                      value={cp.professors.id.toString()} // Ensure value is a string
+                    >
+                      {cp.professors.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
               <div className="space-y-2">
                 <Label>Select your semester</Label>
@@ -554,9 +566,8 @@ const CourseReviewForm = () => {
             {[1, 2, 3, 4, 5].map((step) => (
               <div
                 key={step}
-                className={`w-1/5 h-2 rounded-full mx-1 ${
-                  step <= currentStep ? "bg-purple-600" : "bg-gray-200"
-                }`}
+                className={`w-1/5 h-2 rounded-full mx-1 ${step <= currentStep ? "bg-purple-600" : "bg-gray-200"
+                  }`}
               />
             ))}
           </div>
