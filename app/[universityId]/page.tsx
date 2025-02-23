@@ -42,7 +42,7 @@ type Course = {
   subject_code: string;
   title: string;
   historical_average_grade: number | null;
-  average_rating: number | null;
+  average_rating: any;
   review_count: number;
   universities: {
     name: string;
@@ -104,8 +104,8 @@ function CourseCard({ course }: { course: Course }) {
 
     return `${firstInitial}. ${lastName}`;
   })
-      .slice(-3)
-      .join(', ') || "Unknown Instructor";
+    .slice(-3)
+    .join(', ') || "Unknown Instructor";
 
   const getQualityColor = (rating: number | null) => {
     if (!rating) return 'text-gray-400';
@@ -240,9 +240,9 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
   };
 
   const fetchCourses = async (
-      currentPage: number = page,
-      currentSubject: string = subjectCode,
-      currentCourseName: string = courseName
+    currentPage: number = page,
+    currentSubject: string = subjectCode,
+    currentCourseName: string = courseName
   ) => {
     if (!initialLoading) {
       setLoading(true);
@@ -254,29 +254,27 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
       const toIndex = currentPage * pageSize - 1;
 
       let query = supabase
-          .from("courses")
-          .select(`
-        id,
-        course_code,
-        title,
-        subject_code,
-        historical_average_grade,
-        universities!inner (
-          name
-        ),
-        course_professors!inner (
-          professors!inner (
-            full_name
+        .from("courses_with_review_count")
+        .select(`
+          id,
+          course_code,
+          subject_code,
+          title,
+          historical_average_grade,
+          average_rating,
+          review_count,
+          universities!inner ( name ),
+          course_professors!inner (
+            professors!inner ( full_name )
+          ),
+          course_reviews (
+            id,
+            is_deleted
           )
-        ),
-        course_reviews (
-          rating,
-          is_deleted
-        )
-      `)
-          .eq("university_id", universityId)
-          .range(fromIndex, toIndex);
-
+        `)
+        .eq("university_id", universityId)
+        .order("review_count", { ascending: false })
+        .range(fromIndex, toIndex);
 
 
       // parse the search input to extract subject and course number
@@ -304,15 +302,16 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
       if (error) throw error;
 
       let processedData = (data || []).map(course => {
+        // console.log('processed data before processing', course.course_reviews)
         const validReviews = course.course_reviews?.filter(r => !r.is_deleted) || [];
         const reviewCount = validReviews.length;
-        const averageRating = reviewCount > 0
-            ? validReviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviewCount
-            : null;
+        // const averageRating = reviewCount > 0
+        //   ? validReviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviewCount
+        //   : null;
 
         return {
           ...course,
-          average_rating: averageRating,
+          average_rating: course.average_rating,
           review_count: reviewCount,
           reviews: validReviews,
         };
@@ -323,10 +322,9 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
       // apply filters and sorting
       if (filterMinRating) {
         processedData = processedData.filter(course =>
-            course.average_rating && course.average_rating >= filterMinRating
+          course.average_rating && course.average_rating >= filterMinRating
         );
       }
-
       setCourses(processedData);
     } catch (error) {
       setError("Failed to fetch courses. Please try again.");
@@ -413,18 +411,18 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
               {/* First row */}
               <div>
                 <Select
-                    onValueChange={(value) => setSubjectCode(value === "all" ? "" : value)}
-                    value={subjectCode || "all"}
+                  onValueChange={(value) => setSubjectCode(value === "all" ? "" : value)}
+                  value={subjectCode || "all"}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Subject"/>
+                    <SelectValue placeholder="Select Subject" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Subjects</SelectItem>
                     {subjects.map((subject) => (
-                        <SelectItem key={subject} value={subject}>
-                          {subject}
-                        </SelectItem>
+                      <SelectItem key={subject} value={subject}>
+                        {subject}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -432,11 +430,11 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
 
               <div>
                 <Select
-                    value={filterMinRating !== null ? filterMinRating.toString() : "all"}
-                    onValueChange={(value) => setFilterMinRating(value === "all" ? null : Number(value))}
+                  value={filterMinRating !== null ? filterMinRating.toString() : "all"}
+                  onValueChange={(value) => setFilterMinRating(value === "all" ? null : Number(value))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Min Rating"/>
+                    <SelectValue placeholder="Min Rating" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Any Rating</SelectItem>
@@ -449,22 +447,22 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
 
               {/* Second row - full width search */}
               <div className="relative md:col-span-2">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400"/>
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
-                    placeholder="Search by subject name and code"
-                    className="pl-10"
-                    value={courseName}
-                    onChange={(e) => setCourseName(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  placeholder="Search by subject name and code"
+                  className="pl-10"
+                  value={courseName}
+                  onChange={(e) => setCourseName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 />
               </div>
             </div>
 
             <div className="flex justify-center">
               <Button
-                  onClick={handleSearch}
-                  className="w-full md:w-auto"
-                  size="lg"
+                onClick={handleSearch}
+                className="w-full md:w-auto"
+                size="lg"
               >
                 Search Courses
               </Button>
@@ -475,62 +473,62 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
 
       {/* Error Alert */}
       {error && (
-          <div className="container mx-auto px-4 mb-6">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4"/>
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          </div>
+        <div className="container mx-auto px-4 mb-6">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </div>
       )}
 
       {/* Course List */}
       <div className="container mx-auto px-4 py-8">
         {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                  <CourseCardSkeleton key={i}/>
-              ))}
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <CourseCardSkeleton key={i} />
+            ))}
+          </div>
         ) : courses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {courses.map((course) => (
-                  <CourseCard key={course.id} course={course}/>
-              ))}
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.map((course) => (
+              <CourseCard key={course.id} course={course} />
+            ))}
+          </div>
         ) : (
-            <div className="text-center py-12">
-              <GraduationCap className="mx-auto h-12 w-12 text-gray-400"/>
-              <h3 className="mt-4 text-lg font-semibold text-gray-900">No courses found</h3>
-              <p className="mt-2 text-gray-500">Try adjusting your search criteria</p>
-            </div>
+          <div className="text-center py-12">
+            <GraduationCap className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-4 text-lg font-semibold text-gray-900">No courses found</h3>
+            <p className="mt-2 text-gray-500">Try adjusting your search criteria</p>
+          </div>
         )}
 
         {/* Pagination */}
         {courses.length > 0 && (
-            <div className="pt-8">
-              <div className="flex justify-center items-center gap-4">
-                <Button
-                    onClick={handlePreviousPage}
-                    disabled={page === 1 || loading}
-                    variant="outline"
-                    className="gap-2"
-                >
-                  Previous
-                </Button>
-                <span className="text-sm font-medium">
-                  Page {page}
-                </span>
-                <Button
-                    onClick={handleNextPage}
-                    disabled={courses.length < pageSize || loading}
-                    variant="outline"
-                    className="gap-2"
-                >
-                  Next
-                </Button>
-              </div>
+          <div className="pt-8">
+            <div className="flex justify-center items-center gap-4">
+              <Button
+                onClick={handlePreviousPage}
+                disabled={page === 1 || loading}
+                variant="outline"
+                className="gap-2"
+              >
+                Previous
+              </Button>
+              <span className="text-sm font-medium">
+                Page {page}
+              </span>
+              <Button
+                onClick={handleNextPage}
+                disabled={courses.length < pageSize || loading}
+                variant="outline"
+                className="gap-2"
+              >
+                Next
+              </Button>
             </div>
+          </div>
 
         )}
       </div>
