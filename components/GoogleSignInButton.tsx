@@ -25,7 +25,7 @@ export function GoogleSignInButton() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `http://localhost:3000/auth/callback`,
+        redirectTo: `https://coursechecker.xyz/auth/callback`,
       },
     })
   if (error) {
