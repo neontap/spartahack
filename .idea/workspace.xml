@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fc0e8467-4ea9-4bc7-8913-26c3bd531485" name="Changes" comment="conflict resolution, main merge">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="fc0e8467-4ea9-4bc7-8913-26c3bd531485" name="Changes" comment="conflict resolution, main merge" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -84,6 +82,10 @@
       <workItem from="1739928281535" duration="437000" />
       <workItem from="1739937221451" duration="8297000" />
       <workItem from="1740015168214" duration="16000" />
+      <workItem from="1740019692953" duration="1160000" />
+      <workItem from="1740107341109" duration="41000" />
+      <workItem from="1740107463326" duration="93000" />
+      <workItem from="1740372980114" duration="5079000" />
     </task>
     <task id="LOCAL-00001" summary="conflict resolution, main merge">
       <option name="closed" value="true" />
