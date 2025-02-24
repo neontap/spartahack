@@ -640,7 +640,8 @@ function ReviewCard({
               <span className="text-sm">{review.grading_fairness || "N/A"}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-gray-500 text-sm">Mandatory Attendance:</span>
+              <span className="hidden md:inline text-gray-500 text-sm">Required Attendance:</span>
+              <span className="text-gray-500 inline md:hidden text-sm">Req. Attendance:</span>
               <span className="text-sm">{review.mandatory_attendance !== undefined
                   ? review.mandatory_attendance === true
                       ? 'Yes'
