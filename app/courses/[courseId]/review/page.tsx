@@ -121,7 +121,8 @@ const CourseReviewForm = () => {
       recommend_class: formData.recommend === "yes",
       textbook_required: formData.textbook === "yes",
       comment: formData.review,
-      advice: formData.advice
+      advice: formData.advice,
+      semester: formData.semester
     });
 
     if (error) {
@@ -236,7 +237,7 @@ const CourseReviewForm = () => {
                 }
               >
                 <SelectTrigger className="w-full bg-white">
-                  <SelectValue>
+                  <SelectValue placeholder="Select your professor">
                     {formData.professor
                       ? course.course_professors.find(
                         (cp) => cp.professors.id.toString() === formData.professor
