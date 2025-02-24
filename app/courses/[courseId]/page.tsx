@@ -543,115 +543,119 @@ function ReviewCard({
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow duration-200">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div>
-            {/* Overall Rating and Professor */}
-            <div className="flex items-center gap-4">
+      <Card className="hover:shadow-md transition-shadow duration-200">
+        <CardHeader className="pb-2">
+          <div className="flex flex-col space-y-3">
+            {/* first row on mobile: rating and likes/dislikes */}
+            <div className="flex justify-between items-center w-full">
+              {/* rating section */}
               <div className="flex items-center gap-2">
                 <Badge className={`text-lg py-0.5 px-3 ${getRatingColor(review.rating)}`}>
                   {review.rating.toFixed(1)}
                 </Badge>
                 <span className="text-gray-500 text-xs">Overall Rating</span>
               </div>
-              <div className="h-6 w-px bg-border"/>
-              <div className="">
+
+              {/* likes/dislikes buttons */}
+              <div className="flex items-center gap-4">
+                <button
+                    onClick={() => handleVote(1)}
+                    className={`flex items-center gap-1 hover:text-blue-600 transition-colors ${
+                        userVote === 1 ? "text-blue-600" : "text-gray-500"
+                    }`}
+                >
+                  <ThumbsUp className="h-4 w-4" />
+                  <span className="text-sm">{voteCount.likes}</span>
+                </button>
+                <button
+                    onClick={() => handleVote(-1)}
+                    className={`flex items-center gap-1 hover:text-red-600 transition-colors ${
+                        userVote === -1 ? "text-red-600" : "text-gray-500"
+                    }`}
+                >
+                  <ThumbsDown className="h-4 w-4" />
+                  <span className="text-sm">{voteCount.dislikes}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* second row on mobile: professor and semester */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div>
                 <span className="text-gray-500 text-xs">Taught by: </span>
                 <span className="font-semibold text-sm">{professorName}</span>
               </div>
-              <div className="h-6 w-px bg-border"/>
-              <div className="flex items-center gap-2">
-                {review.semester && (
-                    <Badge variant="outline" className="text-sm">{review.semester}</Badge>
-                )}
+
+              {/* only show vertical separator on desktop */}
+              <div className="hidden md:block h-4 w-px bg-border"></div>
+
+              {review.semester && (
+                  <Badge variant="outline" className="text-sm">{review.semester}</Badge>
+              )}
+              {/* horizontal separator on mobile */}
+              {/*<div className="block md:hidden w-full h-px bg-border"></div>*/}
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-3">
+          {/* main comment */}
+          <div className="pt-1">
+            <p className="text-lg font-semibold text-gray-700 mt-0.5">{review.comment}</p>
+          </div>
+
+          {/* advice - only shown if present */}
+          {review.advice && (
+              <div className="pt-1">
+                <span className="text-gray-500 text-sm">Advice:</span>
+                <p className="text-lg font-semibold text-gray-700 mt-0.5">{review.advice}</p>
               </div>
+          )}
+
+          {/* metrics grid */}
+          <div className="w-full bg-border h-px"></div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+            <div className="flex items-center gap-2">
+              <Badge className={`text-sm ${getDifficultyColor(review.assignment_difficulty)}`}>
+                {review.assignment_difficulty.toFixed(1)}
+              </Badge>
+              <span className="text-gray-500 text-sm">Difficulty</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge className="text-sm">
+                {review.study_material_usefulness.toFixed(1)}
+              </Badge>
+              <span className="text-gray-500 text-sm">Usefulness</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge className={`text-sm ${getDifficultyColor(review.assignment_difficulty)}`}>
+                {review.hours_per_week} h/w
+              </Badge>
+              <span className="text-gray-500 text-sm">Workload</span>
+            </div>
+
+            {/* additional metrics that were in your complete code */}
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-sm">Grading Fairness:</span>
+              <span className="text-sm">{review.grading_fairness || "N/A"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-sm">Mandatory Attendance:</span>
+              <span className="text-sm">{review.mandatory_attendance !== undefined
+                  ? review.mandatory_attendance === true
+                      ? 'Yes'
+                      : 'No' : "N/A"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-sm">Required Textbook:</span>
+              <span className="text-sm">{review.textbook_required !== undefined
+                  ? review.textbook_required === true
+                      ? 'Yes'
+                      : 'No' : "N/A"}</span>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <button
-                onClick={() => handleVote(1)}
-                className={`flex items-center gap-1 hover:text-blue-600 transition-colors ${
-                    userVote === 1 ? "text-blue-600" : "text-gray-500"
-                }`}
-            >
-              <ThumbsUp className="h-4 w-4" />
-              <span className="text-sm">{voteCount.likes}</span>
-            </button>
-            <button
-                onClick={() => handleVote(-1)}
-                className={`flex items-center gap-1 hover:text-red-600 transition-colors ${
-                    userVote === -1 ? "text-red-600" : "text-gray-500"
-                }`}
-            >
-              <ThumbsDown className="h-4 w-4" />
-              <span className="text-sm">{voteCount.dislikes}</span>
-            </button>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-3">
-        {/* Main Comment */}
-        <div className="pt-1">
-          <p className="text-lg font-semibold text-gray-700 mt-0.5">{review.comment}</p>
-        </div>
-        {/* Advice - Only shown if present */}
-        {review.advice && (
-            <div className="pt-1">
-              <span className="text-gray-500 text-sm">Advice:</span>
-              <p className="text-lg font-semibold text-gray-700 mt-0.5">{review.advice}</p>
-            </div>
-        )}
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-          <div className="flex items-center gap-2">
-            <Badge className={`text-sm ${getDifficultyColor(review.assignment_difficulty)}`}>
-              {review.assignment_difficulty.toFixed(1)}
-            </Badge>
-            <span className="text-gray-500 text-sm">Difficulty</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge className="text-sm">
-              {review.study_material_usefulness.toFixed(1)}
-            </Badge>
-            <span className="text-gray-500 text-sm">Usefulness</span>
-          </div>
-          <div className="flex items-center gap-2">
-
-            <Badge className={`text-sm ${getDifficultyColor(review.assignment_difficulty)}`}>
-            {review.hours_per_week} hrs/week
-            </Badge>
-            <span className="text-gray-500 text-sm">Workload</span>
-          </div>
-          {/*           <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-sm">Grade:</span>
-            <span className="text-sm">{review.grade_received || "N/A"}</span>
-          </div>
-*/}
-
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-sm">Grading Fairness:</span>
-            <span className="text-sm">{review.grading_fairness || "N/A"}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-sm">Mandatory Attendance:</span>
-            <span className="text-sm">{review.mandatory_attendance !== undefined
-                ? review.mandatory_attendance === true
-                    ? 'Yes'
-                    : 'No' : "N/A"}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-sm">Required Textbook:</span>
-            <span className="text-sm">{review.textbook_required !== undefined
-                ? review.textbook_required === true
-                    ? 'Yes'
-                    : 'No' : "N/A"}</span>
-          </div>
-
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
   );
 }
 
