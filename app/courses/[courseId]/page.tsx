@@ -91,11 +91,19 @@ const getRatingColor = (rating: number) => {
   return "bg-rating-red text-white";
 };
 
-const getDifficultyColor = (rating: number) => {
-  if (rating >= 4) return "bg-rating-red text-white";
-  if (rating >= 3) return "bg-rating-yellow text-white";
+const getDifficultyColor = (difficulty: number) => {
+  if (difficulty >= 4) return "bg-rating-red text-white";
+  if (difficulty >= 3) return "bg-rating-yellow text-white";
   return "bg-rating-green text-white";
 };
+
+const getWorkloadColor = (workload: number) => {
+  if (workload >= 16) return "bg-rating-red text-white";
+  if (workload >= 12) return "bg-rating-yellow text-white";
+  if (workload >= 8) return "bg-rating-yellow text-white";
+  return "bg-rating-green text-white";
+};
+
 
 // ----- Main Component -----
 function CourseDetailPage() {
@@ -496,7 +504,10 @@ function ReviewCard({
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    if (!session?.user) return;
+    if (!session?.user) {
+      alert("Please sign in to vote on reviews");
+      return;
+    }
 
     try {
       if (userVote === newVote) {
@@ -622,13 +633,13 @@ function ReviewCard({
               <span className="text-gray-500 text-sm">Difficulty</span>
             </div>
             <div className="flex items-center gap-2">
-              <Badge className="text-sm">
+              <Badge className={`text-sm ${getRatingColor(review.study_material_usefulness)}`}>
                 {review.study_material_usefulness.toFixed(1)}
               </Badge>
-              <span className="text-gray-500 text-sm">Usefulness</span>
+              <span className="text-gray-500 text-sm">Material Quality</span>
             </div>
             <div className="flex items-center gap-2">
-              <Badge className={`text-sm ${getDifficultyColor(review.assignment_difficulty)}`}>
+              <Badge className={`text-sm ${getWorkloadColor(review.hours_per_week)}`}>
                 {review.hours_per_week} h/w
               </Badge>
               <span className="text-gray-500 text-sm">Workload</span>
