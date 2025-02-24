@@ -547,11 +547,6 @@ function ReviewCard({
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              {review.semester && (
-                  <Badge variant="outline" className="text-xs">{review.semester}</Badge>
-              )}
-            </div>
             {/* Overall Rating and Professor */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -564,6 +559,12 @@ function ReviewCard({
               <div className="">
                 <span className="text-gray-500 text-xs">Taught by: </span>
                 <span className="font-semibold text-sm">{professorName}</span>
+              </div>
+              <div className="h-6 w-px bg-border"/>
+              <div className="flex items-center gap-2">
+                {review.semester && (
+                    <Badge variant="outline" className="text-sm">{review.semester}</Badge>
+                )}
               </div>
             </div>
           </div>
