@@ -444,7 +444,7 @@ function ReviewCard({
   const professorObj = allProfessors.find(
     (prof) => prof.id === review.professor_id
   );
-  // const professorName = professorObj ? professorObj.full_name : "Not Specified";
+  const professorName = professorObj ? professorObj.full_name : "Not Specified";
 
   const [voteCount, setVoteCount] = useState({
     likes: review.helpful_count || 0,
@@ -548,34 +548,40 @@ function ReviewCard({
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              {/*<h3 className="font-semibold">{professorName}</h3>*/}
               {review.semester && (
-                <Badge variant="outline" className="text-xs">{review.semester}</Badge>
+                  <Badge variant="outline" className="text-xs">{review.semester}</Badge>
               )}
             </div>
-            {/* Overall Rating Badge */}
-            <div className="flex items-center gap-2">
-              <Badge className={`text-lg py-0.5 px-3 ${getRatingColor(review.rating)}`}>
-                {review.rating.toFixed(1)}
-              </Badge>
-              <span className="text-gray-500 text-xs">Overall Rating</span>
+            {/* Overall Rating and Professor */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Badge className={`text-lg py-0.5 px-3 ${getRatingColor(review.rating)}`}>
+                  {review.rating.toFixed(1)}
+                </Badge>
+                <span className="text-gray-500 text-xs">Overall Rating</span>
+              </div>
+              <div className="h-6 w-px bg-border"/>
+              <div className="">
+                <span className="text-gray-500 text-xs">Taught by: </span>
+                <span className="font-semibold text-sm">{professorName}</span>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => handleVote(1)}
-              className={`flex items-center gap-1 hover:text-blue-600 transition-colors ${
-                userVote === 1 ? "text-blue-600" : "text-gray-500"
-              }`}
+                onClick={() => handleVote(1)}
+                className={`flex items-center gap-1 hover:text-blue-600 transition-colors ${
+                    userVote === 1 ? "text-blue-600" : "text-gray-500"
+                }`}
             >
               <ThumbsUp className="h-4 w-4" />
               <span className="text-sm">{voteCount.likes}</span>
             </button>
             <button
-              onClick={() => handleVote(-1)}
-              className={`flex items-center gap-1 hover:text-red-600 transition-colors ${
-                userVote === -1 ? "text-red-600" : "text-gray-500"
-              }`}
+                onClick={() => handleVote(-1)}
+                className={`flex items-center gap-1 hover:text-red-600 transition-colors ${
+                    userVote === -1 ? "text-red-600" : "text-gray-500"
+                }`}
             >
               <ThumbsDown className="h-4 w-4" />
               <span className="text-sm">{voteCount.dislikes}</span>

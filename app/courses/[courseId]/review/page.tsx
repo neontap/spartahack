@@ -82,6 +82,8 @@ const CourseReviewForm = () => {
     // setProfessorId(data.)
   }, [courseId]);
 
+
+
   // Check auth session
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
