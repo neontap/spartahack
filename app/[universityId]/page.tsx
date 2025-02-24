@@ -110,16 +110,15 @@ function CourseCard({ course }: { course: Course }) {
   const getQualityColor = (rating: number | null) => {
     if (!rating) return 'text-gray-400';
     if (rating >= 4) return 'text-green-600';
-    if (rating >= 3) return 'text-emerald-500';
-    if (rating >= 2) return 'text-yellow-500';
+    if (rating >= 3) return 'text-yellow-500';
+    if (rating >= 2) return 'text-red-500';
     return 'text-red-500';
   };
 
   const getRatingLabel = (rating: number | null) => {
     if (!rating) return 'No ratings';
     if (rating >= 4) return 'Excellent';
-    if (rating >= 3) return 'Good';
-    if (rating >= 2) return 'Fair';
+    if (rating >= 3) return 'Fair';
     return 'Poor';
   };
 
