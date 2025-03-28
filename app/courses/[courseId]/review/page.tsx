@@ -28,6 +28,7 @@ const CourseReviewForm = () => {
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     professor: "",
+    otherProfessorName: "", //Adding a professor name for the "other" option
     semester: "",
     courseRating: 3, // How useful/relevant did you find this course?
     studyMaterialUsefulness: 3, // How useful was the course material?
@@ -106,8 +107,43 @@ const CourseReviewForm = () => {
       return;
     }
 
+
+    let finalProfessorId: number;
+
+    if (formData.professor === "other") {
+      if (!formData.otherProfessorName.trim()) {
+        setSubmissionError("Please enter the professor's name.");
+        return;
+      }
+
+      const { data: newProfData, error: profInsertError } = await supabase
+        .from("professors")
+        .insert({ full_name: formData.otherProfessorName.trim() })
+        .select("id")
+        .single();
+  
+      if (profInsertError || !newProfData) {
+        console.error("Failed to insert new professor", profInsertError);
+        setSubmissionError("Failed to add new professor.");
+        return;
+      }
+  
+    finalProfessorId = newProfData.id;
+
+    const { error: linkError } = await supabase
+      .from("course_professors")
+      .insert({ course_id: courseId, professor_id: finalProfessorId });
+    if (linkError) {
+      console.error("Failed to link professor to course", linkError);
+      setSubmissionError("Failed to link professor to course.");
+      return;
+    }
+    } else {
+      finalProfessorId = parseInt(formData.professor);
+    }
+
     const { error } = await supabase.from("course_reviews").insert({
-      professor_id: parseInt(formData.professor),
+      professor_id: finalProfessorId,
       course_id: courseId,
       user_id: user.id,
       rating: formData.courseRating,
@@ -238,24 +274,44 @@ const CourseReviewForm = () => {
               >
                 <SelectTrigger className="w-full bg-white">
                   <SelectValue placeholder="Select your professor">
-                    {formData.professor
-                      ? course.course_professors.find(
-                        (cp) => cp.professors.id.toString() === formData.professor
-                      )?.professors.full_name
-                      : "Select your Professor"}
+                    {formData.professor === "other" 
+                      ? "Other"
+                      : formData.professor
+                        ? course.course_professors.find(
+                          (cp) => cp.professors.id.toString() === formData.professor
+                        )?.professors.full_name
+                        : "Select your Professor"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {course?.course_professors?.map((cp, index) => (
                     <SelectItem
                       key={cp.professors.id || index}
-                      value={cp.professors.id.toString()} // Ensure value is a string
+                      value={cp.professors.id.toString()}
                     >
                       {cp.professors.full_name}
                     </SelectItem>
                   ))}
+                  {/* Adding an "other" option to the dropdown */}
+                  <SelectItem value="other">Other</SelectItem> 
                 </SelectContent>
               </Select>
+
+              {/* Adding a text input for the "other" option */}
+              {formData.professor === "other" && (
+                <div className="space-y-2">
+                  <Label>Please Specify</Label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border rounded-md bg-white"
+                    placeholder="John Doe"
+                    value={formData.otherProfessorName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, otherProfessorName: e.target.value })
+                    }
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Select your semester</Label>
