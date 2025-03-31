@@ -303,7 +303,7 @@ const CourseReviewForm = () => {
                   <Label>Please Specify</Label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border rounded-md bg-white"
+                    className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="John Doe"
                     value={formData.otherProfessorName}
                     onChange={(e) =>
