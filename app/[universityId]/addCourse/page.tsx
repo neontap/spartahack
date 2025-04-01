@@ -2,18 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-} from "@/components/ui/command";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger
-} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { createBrowserClient } from "@supabase/ssr";
@@ -34,7 +22,7 @@ const AddCourseForm = () => {
     const [submissionError, setSubmissionError] = useState<string | null>(null);                      // Error message for submission
     const [submissionSuccess, setSubmissionSuccess] = useState<string | null>(null);                  // Success message for submission
     const [professors, setProfessors] = useState([]);                                                 // List of professors
-    const [open, setOpen] = useState(false);                                                          // If the popover is open                                 
+    const [searchQuery, setSearchQuery] = useState("");                                               // Search query for professors
 
     // Get university ID from URL
     const params = useParams();
@@ -60,14 +48,21 @@ const AddCourseForm = () => {
         });
     }, []);
 
+    useEffect(() => {
+        return () => {
+            debouncedFetch.cancel();
+        };
+    }, []);
+
     // Fetch professors
     const fetchProfessors = async (query: string) => {
         setLoading(true);
         const { data, error } = await supabase
             .from("professors")
             .select("id, full_name")
+            .eq("university_id", universityId)
             .ilike("full_name", `%${query}%`)
-            .limit(20);
+            .limit(10);
 
         if (!error && data) setProfessors(data);
         setLoading(false);
@@ -78,7 +73,7 @@ const AddCourseForm = () => {
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!user) {
             console.error("User not signed in");
             setSubmissionError("Please sign in to submit a review.");
@@ -115,7 +110,7 @@ const AddCourseForm = () => {
                     <div className="space-y-2">
                         <Label>Subject Code</Label>
                         <Input
-                            className="min-h-16 bg-white"
+                            className="min-h-8 bg-white"
                             value={`${formData.subjectCode}`}
                             onChange={(e) => {
                                 const value = e.target.value;
@@ -130,7 +125,7 @@ const AddCourseForm = () => {
                     <div className="space-y-2">
                         <Label>Course Code</Label>
                         <Input
-                            className="min-h-16 bg-white"
+                            className="min-h-8 bg-white"
                             value={`${formData.courseCode}`}
                             onChange={(e) => {
                                 const value = e.target.value;
@@ -142,54 +137,53 @@ const AddCourseForm = () => {
                         />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-2 relative">
                         <Label>Professor</Label>
-                        <Popover open={open} onOpenChange={setOpen}>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" role="combobox" className="w-full justify-between">
-                                    {selected?.full_name || "Select Professor"}
-                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-full p-0">
-                                <Command shouldFilter={false}>
-                                    <CommandInput
-                                        placeholder="Search professor..."
-                                        onValueChange={(value) => {
-                                            if (value.trim().length > 0) debouncedFetch(value);
+                        <Input
+                            className="min-h-8 bg-white"
+                            placeholder="Search professor..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setSearchQuery(value);
+
+                                if (value.trim().length >= 2) {
+                                    debouncedFetch(value);
+                                } else {
+                                    setProfessors([]);
+                                }
+
+                                setFormData({ ...formData, professor: "" });
+                            }}
+                        />
+
+                        {professors.length > 0 && (
+                            <div className="absolute z-10 mt-1 w-full rounded-md border bg-white shadow-lg max-h-60 overflow-auto">
+                                {professors.map((prof) => (
+                                    <div
+                                        key={prof.id}
+                                        onClick={() => {
+                                            setFormData({ ...formData, professor: prof.id });
+                                            setSearchQuery(prof.full_name); 
+                                            setProfessors([]);
                                         }}
-                                        disabled={loading}
-                                    />
-                                    <CommandEmpty>{loading ? "Searching..." : "No professor found."}</CommandEmpty>
-                                    <CommandGroup>
-                                        {professors.map((prof) => (
-                                            <CommandItem
-                                                key={prof.id}
-                                                value={prof.full_name}
-                                                onSelect={() => {
-                                                    setFormData({ ...formData, professor: prof.id });
-                                                    setOpen(false);
-                                                }}
-                                            >
-                                                <Check
-                                                    className={cn(
-                                                        "mr-2 h-4 w-4",
-                                                        prof.id === formData.professor ? "opacity-100" : "opacity-0"
-                                                    )}
-                                                />
-                                                {prof.full_name}
-                                            </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                </Command>
-                            </PopoverContent>
-                        </Popover>
+                                        className={cn(
+                                            "cursor-pointer px-4 py-2 hover:bg-gray-100",
+                                            formData.professor === prof.id && "bg-gray-100 font-medium"
+                                        )}
+                                    >
+                                        {prof.full_name}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
+
 
                     <div className="space-y-2">
                         <Label>Title</Label>
                         <Input
-                            className="min-h-16 bg-white"
+                            className="min-h-8 bg-white"
                             value={formData.title}
                             onChange={(e) => {
                                 const value = e.target.value;
@@ -220,7 +214,7 @@ const AddCourseForm = () => {
     return (
         <>
             <div className="w-full border-t-2 py-8 px-4 rounded-b-2xl shadow-md flex justify-center items-center bg-gray-50">
-                <div className="bg-md-purple w-full md:w-1/2 lg:w-1/4 rounded-2xl shadow-lg p-6 flex justify-center items-center">
+                <div className="w-full md:w-1/2 lg:w-1/4 rounded-2xl shadow-lg p-6 flex justify-center items-center border">
                     <div className="w-full">
                         {renderAddCourseForm()}
                     </div>
