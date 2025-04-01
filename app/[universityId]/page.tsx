@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert";
 import { Search, AlertCircle, GraduationCap, Users, Star, ChevronDown } from "lucide-react";
 import _ from 'lodash';
+import router from "next/router";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -500,6 +501,13 @@ export default function UniversityPage({ params, searchParams }: PageProps) {
             <GraduationCap className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-4 text-lg font-semibold text-gray-900">No courses found</h3>
             <p className="mt-2 text-gray-500">Try adjusting your search criteria</p>
+
+            {/* Add Course Button */}
+            <Link href={`/${universityId}/addCourse`}>
+                <Button className="mt-6" size="lg">
+                Add a Course
+                </Button>
+            </Link> 
           </div>
         )}
 
