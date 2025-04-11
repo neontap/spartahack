@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User } from "lucide-react";
+import { User, BookOpen } from "lucide-react";
 
 export default async function HeaderAuth() {
   const supabase = await createClient();
@@ -50,6 +50,12 @@ export default async function HeaderAuth() {
         <DropdownMenuItem className="flex items-center gap-2">
           <User className="h-4 w-4" />
           <span>{email}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/my-reviews" className="flex items-center gap-2 w-full">
+            <BookOpen className="h-4 w-4" />
+            <span>My Reviews</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem>
           <form action={signOutAction} className="w-full">
