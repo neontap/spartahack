@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import debounce from "lodash.debounce";
+import { sendCustomVerificationAction } from "@/app/actions";
+import Link from "next/link"
 
 const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,6 +25,7 @@ const AddCourseForm = () => {
     const [submissionSuccess, setSubmissionSuccess] = useState<string | null>(null);                  // Success message for submission
     const [professors, setProfessors] = useState([]);                                                 // List of professors
     const [searchQuery, setSearchQuery] = useState("");                                               // Search query for professors
+    const [verified, setVerified] = useState<boolean | null>(null);
 
     // Get university ID from URL
     const params = useParams();
@@ -42,10 +45,35 @@ const AddCourseForm = () => {
 
     // Check auth session
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null);
+        const fetchUserAndVerification = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            const currentUser = session?.user ?? null;
+            setUser(currentUser);
+
+            if (currentUser) {
+                const { data: profile, error } = await supabase
+                    .from("profiles")
+                    .select("verified_at")
+                    .eq("id", currentUser.id)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error("Unexpected error fetching profile:", error);
+                    setVerified(false);
+                } else if (!profile) {
+                    console.warn("No profile found for user.");
+                    setVerified(false);
+                } else {
+                    setVerified(!!profile.verified_at); 
+                }
+            } else {
+                setVerified(false); 
+            }
+
             setLoading(false);
-        });
+        };
+
+        fetchUserAndVerification();
     }, []);
 
     useEffect(() => {
@@ -164,7 +192,7 @@ const AddCourseForm = () => {
                                         key={prof.id}
                                         onClick={() => {
                                             setFormData({ ...formData, professor: prof.id });
-                                            setSearchQuery(prof.full_name); 
+                                            setSearchQuery(prof.full_name);
                                             setProfessors([]);
                                         }}
                                         className={cn(
@@ -207,6 +235,35 @@ const AddCourseForm = () => {
                     </Button>
 
                 </div>
+            </div>
+        );
+    }
+
+    // Only render the form if not loading and the user is logged in
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+    if (!user) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <p>You must be logged in to submit a review. Please <Link className="font-bold underline" href="/sign-in"> sign in</Link>.</p>
+            </div>
+        );
+    }
+
+    if (!verified) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen text-center">
+                <p className="mb-4 text-gray-700">
+                    You must verify your email to submit a review.
+                </p>
+                <form action={sendCustomVerificationAction}>
+                    <Button
+                        type="submit"
+                        className="text-white ml-auto">
+                        Send verification email
+                    </Button>
+                </form>
             </div>
         );
     }
