@@ -228,7 +228,7 @@ export const sendCustomVerificationAction = async () => {
     const verifyLink = `${origin}/email-verified?token=${user.id}&email=${encodeURIComponent(user.email)}`;
 
     const { error } = await resend.emails.send({
-        from: "onboarding@resend.dev",
+        from: "noreply@coursechecker.xyz",
         to: user.email,
         subject: "Verify your email",
         html: `<p>Click the link below to verify your email:</p>
