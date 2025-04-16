@@ -10,7 +10,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User } from "lucide-react";
+import { User, BookOpen } from "lucide-react";
 
 export default async function HeaderAuth() {
     const supabase = await createClient();
@@ -70,6 +70,12 @@ export default async function HeaderAuth() {
                     <form className="w-full" action={sendCustomVerificationAction}>
                         <button className="w-full text-left">Verify Email</button>
                     </form>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href="/my-reviews" className="flex items-center gap-2 w-full">
+                        <BookOpen className="h-4 w-4" />
+                        <span>My Reviews</span>
+                    </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                     <form action={signOutAction} className="w-full">
