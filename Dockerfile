@@ -19,6 +19,9 @@ RUN npm install -g yarn@$YARN_VERSION --force
 # --- Pass in your Supabase public vars as build args ---
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ARG NEXT_PUBLIC_SUPABASE_URL
+ARG RESEND_API_KEY
+
+ENV RESEND_API_KEY=${RESEND_API_KEY}
 # Set them as environment variables so Next.js can access them at build time
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
