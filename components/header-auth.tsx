@@ -66,16 +66,23 @@ export default async function HeaderAuth() {
                     <User className="h-4 w-4" />
                     <span>{email}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-2">
-                    <form className="w-full" action={sendCustomVerificationAction}>
-                        <button className="w-full text-left">Verify Email</button>
-                    </form>
-                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                     <Link href="/my-reviews" className="flex items-center gap-2 w-full">
                         <BookOpen className="h-4 w-4" />
                         <span>My Reviews</span>
                     </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex items-center gap-2">
+                    <form className="w-full" action={sendCustomVerificationAction}>
+                        <button className="w-full text-left flex items-center gap-2">
+                            <span>Verify Email</span>
+                            <span
+                                className={`h-3 w-3 rounded-full ${
+                                    verified ? "bg-green-500" : "bg-red-500"
+                                }`}
+                            ></span>
+                        </button>
+                    </form>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                     <form action={signOutAction} className="w-full">
