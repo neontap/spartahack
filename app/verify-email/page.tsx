@@ -1,11 +1,13 @@
 "use client";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 export default function VerifyEmailStatusPage() {
     const searchParams = useSearchParams();
     const status = searchParams.get("status");
 
     return (
+      <Suspense>
         <div className="flex flex-col justify-center items-center h-screen p-6 text-center">
             <h1 className="text-2xl font-bold">Verify Your Email</h1>
             {status === "sent" && (
@@ -18,5 +20,6 @@ export default function VerifyEmailStatusPage() {
                 <p className="mt-2 text-red-600">Your email domain is not allowed. Please sign up with a valid university email.</p>
             )}
         </div>
+        </Suspense>
     );
 }
