@@ -182,6 +182,8 @@ export const signOutAction = async () => {
     return redirect("/sign-in");
 };
 
+// Modified version of sendCustomVerificationAction
+
 export const sendCustomVerificationAction = async () => {
     const supabase = await createClient();
     const {
@@ -222,10 +224,11 @@ export const sendCustomVerificationAction = async () => {
         return redirect("/verify-email?status=bademail");
     }
 
+    // Instead of using headers().get("origin"), use an environment variable
+    // You would need to set this in your deployment environment
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://coursechecker.xyz";
 
-    const origin = (await headers()).get("origin");
-
-    const verifyLink = `${origin}/email-verified?token=${user.id}&email=${encodeURIComponent(user.email)}`;
+    const verifyLink = `${baseUrl}/email-verified?token=${user.id}&email=${encodeURIComponent(user.email)}`;
 
     const { error } = await resend.emails.send({
         from: "noreply@coursechecker.xyz",
