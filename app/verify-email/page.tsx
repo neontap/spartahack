@@ -1,14 +1,16 @@
-"use client";                             // ← must be first line
+"use client";
+
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function VerifyEmailStatusPage() {
+// 1) Child: the only place that calls the hook
+function VerifyEmailInner() {
   const searchParams = useSearchParams();
   const status = searchParams.get("status");
 
   return (
     <div className="flex flex-col justify-center items-center h-screen p-6 text-center">
       <h1 className="text-2xl font-bold">Verify Your Email</h1>
-
       {status === "sent" && (
         <p className="mt-2">
           A verification email has been sent. Please check your inbox!
@@ -26,5 +28,14 @@ export default function VerifyEmailStatusPage() {
         </p>
       )}
     </div>
+  );
+}
+
+// 2) Parent: wraps the hook‑using child in Suspense
+export default function VerifyEmailStatusPage() {
+  return (
+    <Suspense fallback={<div>Loading…</div>}>
+      <VerifyEmailInner />
+    </Suspense>
   );
 }
