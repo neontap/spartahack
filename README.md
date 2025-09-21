@@ -1,3 +1,5 @@
+![Image](https://github.com/user-attachments/assets/e22ea4f7-a5f8-405a-b8c4-f48b255f3a19)
+
 # CourseChecker Documentation
 
 ## Overview
