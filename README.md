@@ -378,4 +378,4 @@ For technical issues:
 1. check environment variables
 2. verify supabase connection
 3. confirm database schema matches expectations
-4. test authentication flows in incognito mode
+4. test authentication flows in incognito mode.
